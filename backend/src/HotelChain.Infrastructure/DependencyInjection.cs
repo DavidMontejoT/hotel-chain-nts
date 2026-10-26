@@ -11,6 +11,10 @@ namespace HotelChain.Infrastructure;
 
 public static class DependencyInjection
 {
+    // Migrations are provider specific, so each provider keeps them in its own assembly.
+    private const string SqliteMigrationsAssembly = "HotelChain.Migrations.Sqlite";
+    private const string SqlServerMigrationsAssembly = "HotelChain.Migrations.SqlServer";
+
     public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
         var dbSection = configuration.GetSection(DatabaseOptions.SectionName);
@@ -23,13 +27,16 @@ public static class DependencyInjection
             switch (dbOptions.Provider.ToLowerInvariant())
             {
                 case "sqlserver":
-                    options.UseSqlServer(connectionString, sql => sql.EnableRetryOnFailure());
+                    options.UseSqlServer(connectionString, sql => sql
+                        .MigrationsAssembly(SqlServerMigrationsAssembly)
+                        .EnableRetryOnFailure());
                     break;
                 case "inmemory":
                     options.UseInMemoryDatabase(connectionString ?? "HotelChain");
                     break;
                 case "sqlite":
-                    options.UseSqlite(connectionString ?? "Data Source=hotelchain.db");
+                    options.UseSqlite(connectionString ?? "Data Source=hotelchain.db", sqlite => sqlite
+                        .MigrationsAssembly(SqliteMigrationsAssembly));
                     break;
                 default:
                     throw new InvalidOperationException($"Proveedor de base de datos no soportado: {dbOptions.Provider}");

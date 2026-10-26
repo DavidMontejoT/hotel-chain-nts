@@ -7,8 +7,8 @@ public sealed class DatabaseOptions
     /// <summary>Sqlite | SqlServer | InMemory</summary>
     public string Provider { get; set; } = "Sqlite";
 
-    /// <summary>Crea el esquema al iniciar si no existe.</summary>
-    public bool EnsureCreated { get; set; } = true;
+    /// <summary>Aplica las migraciones pendientes al iniciar la aplicación.</summary>
+    public bool ApplyMigrations { get; set; }
 
     /// <summary>Inserta datos de ejemplo si la tabla está vacía.</summary>
     public bool Seed { get; set; }

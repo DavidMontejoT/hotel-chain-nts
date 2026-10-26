@@ -15,8 +15,10 @@ public static class DbInitializer
         var db = scope.ServiceProvider.GetRequiredService<HotelChainDbContext>();
         var logger = scope.ServiceProvider.GetRequiredService<ILoggerFactory>().CreateLogger(typeof(DbInitializer));
 
-        if (options.EnsureCreated)
-            await db.Database.EnsureCreatedAsync();
+        if (!db.Database.IsRelational())
+            await db.Database.EnsureCreatedAsync(); // InMemory provider (tests) has no migrations.
+        else if (options.ApplyMigrations)
+            await db.Database.MigrateAsync();
 
         if (options.Seed && !await db.Hotels.AnyAsync())
         {

@@ -10,12 +10,18 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.11" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.11">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\HotelChain.Application\HotelChain.Application.csproj" />
     <ProjectReference Include="..\HotelChain.Infrastructure\HotelChain.Infrastructure.csproj" />
+    <ProjectReference Include="..\HotelChain.Migrations.Sqlite\HotelChain.Migrations.Sqlite.csproj" />
+    <ProjectReference Include="..\HotelChain.Migrations.SqlServer\HotelChain.Migrations.SqlServer.csproj" />
   </ItemGroup>
 
 </Project>
