@@ -39,7 +39,7 @@ docker compose up --build
 | Aplicación (Angular servido por nginx) | http://localhost:8080 |
 | API | http://localhost:5080 |
 
-La API corre en modo **Production** contra **SQL Server 2022**, aplica las migraciones al iniciar y nginx redirige `/api` hacia ella. Los secretos de demostración se pueden cambiar copiando `.env.example` a `.env`. En Mac con Apple Silicon, la imagen de SQL Server corre emulada (`linux/amd64`), así que la primera vez tarda un poco más.
+La API corre en modo **Production** contra **SQL Server 2022**, aplica las migraciones al iniciar y nginx redirige `/api` y `/uploads` hacia ella. Las fotos subidas se guardan en un volumen. Los secretos de demostración se pueden cambiar copiando `.env.example` a `.env`. En Mac con Apple Silicon, la imagen de SQL Server corre emulada (`linux/amd64`), así que la primera vez tarda un poco más.
 
 ## Ejercicio 1 · API REST
 
@@ -82,6 +82,7 @@ Decisiones relevantes para **escalabilidad, reutilización y separación de resp
 | `POST` | `/api/hotels` | **Admin** | 201 · 400 · 401 · 409 (nombre repetido) |
 | `PUT` | `/api/hotels/{id}` | **Admin** | 200 · 400 · 401 · 404 · 409 |
 | `DELETE` | `/api/hotels/{id}` | **Admin** | 204 · 401 · 404 |
+| `POST` | `/api/images` | **Admin** | 201 con la URL de la foto · 400 · 401 |
 | `GET` | `/health` | Público | Health check |
 
 Parámetros de filtro de `GET /api/hotels` (todos opcionales y combinables):
@@ -104,6 +105,16 @@ curl -X POST http://localhost:5080/api/hotels \
   -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
   -d '{"name":"Hotel Test 5 estrellas","city":"Bogotá","address":"Calle 100 # 10-20","rating":5,"pricePerNight":500000}'
 ```
+
+### Fotos de los hoteles
+
+Un hotel puede tener una URL de imagen externa (`https://...`) o una foto subida desde el panel de administración:
+
+1. El frontend envía el archivo a `POST /api/images` (`multipart/form-data`, campo `file`).
+2. La API valida el **contenido real** del archivo (firma JPG, PNG, WEBP o GIF, no solo la extensión) y que no supere 5 MB, lo guarda con un nombre aleatorio y responde `{ "url": "/uploads/<archivo>" }`.
+3. Esa URL se guarda en el hotel y la API sirve el archivo como estático en `/uploads`.
+
+Al cambiar o eliminar la foto de un hotel, el archivo anterior se borra. El almacenamiento está detrás de la interfaz `IImageStorage`, así que se puede cambiar por Azure Blob o S3 sin tocar el resto. La carpeta se configura con `ImageStorage:RootPath` (por defecto `uploads/`, ignorada por git), y en Docker se monta como volumen.
 
 ### Migraciones (EF Core)
 
@@ -157,7 +168,7 @@ cd backend
 dotnet test
 ```
 
-16 pruebas: filtros por nombre y calificación (combinados, exacta y mínima), búsqueda sin tildes, nombre duplicado, 404, autorización (401 sin token), validaciones (400) y el flujo CRUD completo contra la API.
+22 pruebas: filtros por nombre y calificación (combinados, exacta y mínima), búsqueda sin tildes, nombre duplicado, 404, autorización (401 sin token), validaciones (400), el flujo CRUD completo contra la API y la subida de fotos (archivo válido, archivo falso con extensión de imagen, sin token y limpieza del archivo al borrar el hotel).
 
 ## Ejercicio 2 · Frontend Angular
 
@@ -168,14 +179,15 @@ frontend/src/app/
 │   ├── services/       HotelService y AuthService (HttpClient), toasts y confirmaciones
 │   ├── interceptors/   JWT del administrador y manejo global de errores HTTP
 │   └── guards/         Protección de las rutas /admin
-├── shared/components/  Barra de búsqueda, estrellas, toasts y modal de confirmación
+├── shared/components/  Barra de búsqueda, estrellas, selector de imagen, toasts y modal de confirmación
+├── shared/pipes/       imageSrc: resuelve las fotos subidas contra el origen de la API
 └── features/
     ├── public/landing  Landing page para usuarios  (/)
     └── admin/          Login, tabla de hoteles y formulario crear/editar  (/admin)
 ```
 
 - **Usuario** (`/`): introducción a la cadena, todos los hoteles en tarjetas y búsqueda por nombre y/o calificación (exacta o mínima). **Cada cambio en los filtros hace una petición a la API** (`GET /api/hotels?name=...&rating=...`); el frontend no filtra con JavaScript.
-- **Administrador** (`/admin`): inicio de sesión, tabla paginada con los mismos filtros, crear y editar con formularios reactivos validados, y eliminar con un modal de confirmación. Las rutas están protegidas por un guard y el token se envía con un interceptor.
+- **Administrador** (`/admin`): inicio de sesión, tabla paginada con los mismos filtros, crear y editar con formularios reactivos validados (la imagen se puede **subir desde el computador o pegar como URL**, con vista previa), y eliminar con un modal de confirmación. Las rutas están protegidas por un guard y el token se envía con un interceptor.
 - **Manejo de errores**: un interceptor muestra un aviso cuando la API no responde, la sesión expira, el recurso no existe o hay un error del servidor. Los errores de validación (400) y de nombre repetido (409) se muestran en el formulario.
 - **Responsivo**: grid fluido para las tarjetas, menú hamburguesa en móvil, y la tabla del admin se convierte en tarjetas en pantallas pequeñas.
 - Componentes standalone, carga diferida por ruta y signals.
