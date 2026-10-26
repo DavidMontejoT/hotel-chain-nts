@@ -7,7 +7,7 @@ public sealed class JwtOptions
     public string Issuer { get; set; } = "HotelChain.Api";
     public string Audience { get; set; } = "HotelChain.Client";
 
-    /// <summary>Clave simétrica (mínimo 32 caracteres). En producción debe venir de una variable de entorno o secreto.</summary>
+    /// <summary>Symmetric signing key (at least 32 characters). In production it must come from an environment variable or secret store.</summary>
     public string Key { get; set; } = string.Empty;
 
     public int ExpirationMinutes { get; set; } = 60;

@@ -9,7 +9,7 @@ import { ToastService } from '../../../core/services/toast.service';
 
 const URL_PATTERN = /^https?:\/\/.+/i;
 
-/** Formulario compartido para crear y editar hoteles. */
+/** Shared form for creating and editing hotels. */
 @Component({
   selector: 'app-hotel-form',
   imports: [ReactiveFormsModule, RouterLink],
@@ -21,7 +21,7 @@ export class HotelFormComponent implements OnInit {
   private readonly router = inject(Router);
   private readonly toast = inject(ToastService);
 
-  /** Id del hotel en edición (parámetro de ruta); vacío al crear. */
+  /** Id of the hotel being edited (route param); empty when creating. */
   readonly id = input<string>();
 
   protected readonly ratings = [1, 2, 3, 4, 5];

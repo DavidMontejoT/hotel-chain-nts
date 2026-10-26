@@ -7,9 +7,9 @@ public sealed class DatabaseOptions
     /// <summary>Sqlite | SqlServer | InMemory</summary>
     public string Provider { get; set; } = "Sqlite";
 
-    /// <summary>Aplica las migraciones pendientes al iniciar la aplicación.</summary>
+    /// <summary>Applies pending migrations on startup.</summary>
     public bool ApplyMigrations { get; set; }
 
-    /// <summary>Inserta datos de ejemplo si la tabla está vacía.</summary>
+    /// <summary>Inserts sample hotels when the table is empty.</summary>
     public bool Seed { get; set; }
 }

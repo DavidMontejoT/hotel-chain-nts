@@ -46,5 +46,5 @@ await app.Services.InitializeDatabaseAsync();
 
 app.Run();
 
-// Expuesto para las pruebas de integración (WebApplicationFactory).
+// Exposed for the integration tests (WebApplicationFactory).
 public partial class Program;

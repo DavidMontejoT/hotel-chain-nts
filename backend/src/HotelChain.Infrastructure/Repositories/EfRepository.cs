@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace HotelChain.Infrastructure.Repositories;
 
-/// <summary>Repositorio genérico reutilizable para cualquier entidad.</summary>
+/// <summary>Generic repository reusable for any entity.</summary>
 public class EfRepository<T>(HotelChainDbContext db) : IRepository<T> where T : Entity
 {
     protected HotelChainDbContext Db { get; } = db;

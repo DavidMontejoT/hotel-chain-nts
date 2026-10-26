@@ -12,7 +12,7 @@ public sealed record LoginResponse(string Token, DateTime ExpiresAt, string User
 
 public interface IAuthService
 {
-    /// <summary>Devuelve un token si las credenciales son válidas; null en caso contrario.</summary>
+    /// <summary>Returns a token when the credentials are valid; otherwise null.</summary>
     LoginResponse? Login(LoginRequest request);
 }
 

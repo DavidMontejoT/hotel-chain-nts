@@ -43,7 +43,7 @@ export class LoginComponent {
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
 
-  /** Ruta a la que volver tras iniciar sesión (query param). */
+  /** URL to return to after signing in (query param). */
   readonly returnUrl = input<string>();
 
   protected readonly loading = signal(false);

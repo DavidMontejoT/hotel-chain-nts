@@ -34,7 +34,7 @@ h1, h2, h3 { line-height: 1.2; margin: 0 0 .5em; }
 .card { background: var(--c-surface); border: 1px solid var(--c-border); border-radius: var(--radius); box-shadow: var(--shadow); }
 .muted { color: var(--c-muted); }
 
-/* Formularios */
+/* Forms */
 label.field, .field { display: flex; flex-direction: column; gap: 6px; font-size: .875rem; font-weight: 500; }
 input, select, textarea {
   font: inherit; color: var(--c-text); background: var(--c-surface);
@@ -44,7 +44,7 @@ input:focus, select:focus, textarea:focus, .btn:focus-visible { outline: 2px sol
 .ng-invalid.ng-touched:not(form) { border-color: var(--c-danger); }
 .error-text { color: var(--c-danger); font-size: .8rem; font-weight: 400; }
 
-/* Botones */
+/* Buttons */
 .btn {
   display: inline-flex; align-items: center; justify-content: center; gap: 6px;
   font: inherit; font-weight: 600; border-radius: 8px; border: 1px solid transparent;
@@ -59,7 +59,7 @@ input:focus, select:focus, textarea:focus, .btn:focus-visible { outline: 2px sol
 .btn-danger:hover { background: var(--c-danger-bg); }
 .btn-sm { padding: 6px 12px; font-size: .875rem; }
 
-/* Mensajes */
+/* Messages */
 .alert { border-radius: 8px; padding: 12px 14px; margin-bottom: 16px; }
 .alert-error { background: var(--c-danger-bg); color: var(--c-danger); }
 .alert-success { background: var(--c-success-bg); color: var(--c-success); }

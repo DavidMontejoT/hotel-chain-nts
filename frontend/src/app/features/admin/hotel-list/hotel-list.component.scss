@@ -13,7 +13,7 @@ tbody tr:last-child td { border-bottom: 0; }
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
 .pager { display: flex; justify-content: center; align-items: center; gap: 16px; margin-top: 20px; }
 
-/* En pantallas pequeñas cada fila se muestra como una tarjeta. */
+/* On small screens each row is rendered as a card. */
 @media (max-width: 720px) {
   thead { display: none; }
   table, tbody, tr, td { display: block; width: 100%; }

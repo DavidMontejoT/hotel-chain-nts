@@ -15,7 +15,7 @@ public class HotelChainDbContext(DbContextOptions<HotelChainDbContext> options) 
 
     protected override void ConfigureConventions(ModelConfigurationBuilder builder)
     {
-        // Todas las fechas se guardan en UTC; al leerlas se marcan como UTC para serializarlas con "Z".
+        // Dates are stored in UTC and flagged as UTC when read, so they serialize with a trailing "Z".
         builder.Properties<DateTime>().HaveConversion<UtcDateTimeConverter>();
     }
 

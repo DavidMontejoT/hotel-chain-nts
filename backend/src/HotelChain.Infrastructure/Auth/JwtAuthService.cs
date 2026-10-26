@@ -9,8 +9,8 @@ using Microsoft.IdentityModel.Tokens;
 namespace HotelChain.Infrastructure.Auth;
 
 /// <summary>
-/// Autenticación del administrador con credenciales configurables y emisión de JWT.
-/// Se puede reemplazar por un proveedor de identidad real sin tocar las capas superiores.
+/// Authenticates the administrator against configured credentials and issues a JWT.
+/// It can be swapped for a real identity provider without touching the upper layers.
 /// </summary>
 public sealed class JwtAuthService(IOptions<JwtOptions> jwt, IOptions<AdminUserOptions> admin, TimeProvider clock) : IAuthService
 {

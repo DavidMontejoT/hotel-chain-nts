@@ -6,7 +6,7 @@ import { HotelFilter } from '../../core/models/hotel.model';
 
 export type RatingMode = 'exact' | 'min';
 
-/** Barra de búsqueda reutilizable: filtra por nombre y/o calificación. */
+/** Reusable search bar: emits name and/or rating filters that are sent to the API. */
 @Component({
   selector: 'app-hotel-search',
   imports: [ReactiveFormsModule],

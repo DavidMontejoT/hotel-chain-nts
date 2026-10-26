@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace HotelChain.Api.Middleware;
 
-/// <summary>Traduce las excepciones de la aplicación a respuestas ProblemDetails (RFC 7807).</summary>
+/// <summary>Maps application exceptions to ProblemDetails responses (RFC 7807).</summary>
 public sealed class ExceptionHandlingMiddleware(RequestDelegate next, ILogger<ExceptionHandlingMiddleware> logger, IHostEnvironment env)
 {
     public async Task InvokeAsync(HttpContext context)
@@ -30,7 +30,7 @@ public sealed class ExceptionHandlingMiddleware(RequestDelegate next, ILogger<Ex
                 Status = status,
                 Title = title,
                 Instance = context.Request.Path,
-                // Solo exponemos detalles técnicos en desarrollo.
+                // Technical details are only exposed in development.
                 Detail = env.IsDevelopment() && status == StatusCodes.Status500InternalServerError ? ex.ToString() : null,
             };
 

@@ -12,7 +12,7 @@ namespace HotelChain.Api.Controllers;
 [Produces("application/json")]
 public sealed class HotelsController(IHotelService hotels) : ControllerBase
 {
-    /// <summary>Lista hoteles, filtrando opcionalmente por nombre y/o calificación.</summary>
+    /// <summary>Lists hotels, optionally filtered by name and/or rating. Filtering runs in the database.</summary>
     /// <example>GET /api/hotels?name=aurora&amp;minRating=4</example>
     [HttpGet]
     [AllowAnonymous]

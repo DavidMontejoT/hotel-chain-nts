@@ -15,9 +15,9 @@ export type HotelRequest = Omit<Hotel, 'id' | 'createdAt' | 'updatedAt'>;
 
 export interface HotelFilter {
   name?: string;
-  /** Calificación exacta (1-5). */
+  /** Exact rating (1-5). */
   rating?: number | null;
-  /** Calificación mínima (1-5). */
+  /** Minimum rating (1-5). */
   minRating?: number | null;
   page?: number;
   pageSize?: number;
@@ -38,7 +38,7 @@ export interface LoginResponse {
   role: string;
 }
 
-/** Formato de error ProblemDetails que devuelve la API. */
+/** ProblemDetails error payload returned by the API. */
 export interface ProblemDetails {
   title?: string;
   status?: number;

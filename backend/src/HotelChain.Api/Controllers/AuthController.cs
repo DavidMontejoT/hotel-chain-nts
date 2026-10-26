@@ -8,7 +8,7 @@ namespace HotelChain.Api.Controllers;
 [Produces("application/json")]
 public sealed class AuthController(IAuthService auth) : ControllerBase
 {
-    /// <summary>Inicia sesión como administrador y devuelve un JWT.</summary>
+    /// <summary>Signs in as administrator and returns a JWT.</summary>
     [HttpPost("login")]
     [ProducesResponseType<LoginResponse>(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]

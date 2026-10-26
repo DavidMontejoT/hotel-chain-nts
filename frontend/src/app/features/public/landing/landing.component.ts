@@ -20,7 +20,7 @@ export class LandingComponent {
   protected readonly total = signal(0);
   protected readonly loading = signal(true);
   protected readonly error = signal<string | null>(null);
-  /** Hoteles cuya imagen no cargó; se muestra el marcador de posición. */
+  /** Hotels whose image failed to load; a placeholder is shown instead. */
   protected readonly brokenImages = signal(new Set<number>());
 
   constructor() {
