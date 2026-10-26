@@ -3,16 +3,20 @@ using Microsoft.Extensions.Logging;
 
 namespace HotelChain.Application.Images;
 
-public sealed class ImageService(IImageStorage storage, ILogger<ImageService> logger) : IImageService
+public sealed class ImageService(IImageStorage storage, IImageOptimizer optimizer, ILogger<ImageService> logger) : IImageService
 {
-    public const long MaxBytes = 5 * 1024 * 1024;
+    /// <summary>Largest file accepted from the client; it is optimized down to <see cref="TargetBytes"/>.</summary>
+    public const long MaxBytes = 10 * 1024 * 1024;
+
+    /// <summary>Maximum weight of a stored image (400 KB).</summary>
+    public const long TargetBytes = 400 * 1024;
 
     public async Task<ImageUploadResult> UploadAsync(Stream content, long length, CancellationToken ct = default)
     {
         if (length == 0)
             throw new ValidationException("El archivo está vacío.");
         if (length > MaxBytes)
-            throw new ValidationException("La imagen no puede superar 5 MB.");
+            throw new ValidationException("La imagen no puede superar 10 MB.");
 
         // Trust the file content, not the name or the Content-Type sent by the client.
         var header = new byte[12];
@@ -23,11 +27,15 @@ public sealed class ImageService(IImageStorage storage, ILogger<ImageService> lo
         using var buffer = new MemoryStream();
         buffer.Write(header, 0, read);
         await content.CopyToAsync(buffer, ct);
-        buffer.Position = 0;
 
-        var url = await storage.SaveAsync(buffer, extension, ct);
-        logger.LogInformation("Image uploaded to {ImageUrl} ({Bytes} bytes)", url, length);
-        return new ImageUploadResult(url);
+        var image = await optimizer.OptimizeAsync(buffer.ToArray(), extension, TargetBytes, ct);
+        using var optimized = new MemoryStream(image.Content, writable: false);
+        var url = await storage.SaveAsync(optimized, image.Extension, ct);
+
+        logger.LogInformation(
+            "Image uploaded to {ImageUrl}: {OriginalBytes} -> {Bytes} bytes, {Width}x{Height}",
+            url, length, image.Content.Length, image.Width, image.Height);
+        return new ImageUploadResult(url, image.Width, image.Height, image.Content.Length);
     }
 
     private static string? DetectExtension(ReadOnlySpan<byte> h)

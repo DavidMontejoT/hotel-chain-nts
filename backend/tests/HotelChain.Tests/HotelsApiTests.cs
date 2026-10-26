@@ -152,6 +152,20 @@ public class HotelsApiTests : IClassFixture<HotelsApiTests.ApiFactory>
     }
 
     [Fact]
+    public async Task Uploaded_photos_are_optimized_to_400_kb_or_less()
+    {
+        var client = await AdminClientAsync();
+
+        var upload = await client.PostAsync("/api/images", FileForm(TestImages.LargePng(), "grande.png", "image/png"));
+
+        Assert.Equal(HttpStatusCode.Created, upload.StatusCode);
+        var result = (await upload.Content.ReadFromJsonAsync<ImageUploadResult>())!;
+        Assert.EndsWith(".webp", result.Url);
+        Assert.True(result.SizeBytes <= ImageService.TargetBytes);
+        Assert.True(new FileInfo(Path.Combine(_factory.ImagesPath, Path.GetFileName(result.Url))).Length <= ImageService.TargetBytes);
+    }
+
+    [Fact]
     public async Task Non_image_files_are_rejected_even_with_an_image_content_type()
     {
         var client = await AdminClientAsync();

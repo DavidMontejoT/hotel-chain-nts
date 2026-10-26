@@ -55,6 +55,7 @@ public static class DependencyInjection
         services.Configure<ImageStorageOptions>(configuration.GetSection(ImageStorageOptions.SectionName));
         services.AddSingleton<LocalImageStorage>();
         services.AddSingleton<IImageStorage>(sp => sp.GetRequiredService<LocalImageStorage>());
+        services.AddSingleton<IImageOptimizer, SkiaImageOptimizer>();
 
         return services;
     }

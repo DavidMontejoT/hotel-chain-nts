@@ -11,7 +11,7 @@ namespace HotelChain.Api.Controllers;
 [Authorize(Roles = Roles.Admin)]
 public sealed class ImagesController(IImageService images) : ControllerBase
 {
-    /// <summary>Uploads a hotel photo (JPG, PNG, WEBP or GIF, up to 5 MB) and returns the URL to store in the hotel.</summary>
+    /// <summary>Uploads a hotel photo (JPG, PNG, WEBP or GIF, up to 10 MB), optimizes it to 400 KB or less and returns the URL to store in the hotel.</summary>
     [HttpPost]
     [Consumes("multipart/form-data")]
     [RequestSizeLimit(ImageService.MaxBytes + 64 * 1024)]
