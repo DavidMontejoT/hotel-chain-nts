@@ -41,6 +41,24 @@ docker compose up --build
 
 La API corre en modo **Production** contra **SQL Server 2022**, aplica las migraciones al iniciar y nginx redirige `/api` y `/uploads` hacia ella. Las fotos subidas se guardan en un volumen. Los secretos de demostración se pueden cambiar copiando `.env.example` a `.env`. En Mac con Apple Silicon, la imagen de SQL Server corre emulada (`linux/amd64`), así que la primera vez tarda un poco más.
 
+## ¿Dónde está cada cosa?
+
+| Qué buscas | Dónde está |
+|---|---|
+| Controladores (solo reciben peticiones HTTP) | `backend/src/HotelChain.Api/Controllers/` |
+| Servicios (lógica de negocio) | `backend/src/HotelChain.Application/Hotels/IHotelService.cs` y `HotelService.cs` |
+| Repositorios (acceso a datos) | Interfaces en `backend/src/HotelChain.Domain/Repositories/`, implementación en `backend/src/HotelChain.Infrastructure/Repositories/` |
+| Modelos | Entidad en `backend/src/HotelChain.Domain/Entities/`, DTOs en `backend/src/HotelChain.Application/Hotels/Dtos/` |
+| Base de datos (DbContext) | `backend/src/HotelChain.Infrastructure/Persistence/` |
+| Migraciones | `backend/src/HotelChain.Migrations.Sqlite/Migrations/` (desarrollo) y `backend/src/HotelChain.Migrations.SqlServer/Migrations/` (producción) |
+| Configuración del backend por entorno | `appsettings.json` (base), `appsettings.Development.json` y `appsettings.Production.json` en `backend/src/HotelChain.Api/` |
+| Frontend: panel admin y landing | `frontend/src/app/features/admin/` y `frontend/src/app/features/public/` |
+| Frontend: servicios que llaman a la API | `frontend/src/app/core/services/` (`hotel.service.ts` usa `environment.apiUrl`) |
+| Frontend: componentes reutilizables | `frontend/src/app/shared/` (buscador, estrellas, selector de imagen, modal, avisos) |
+| Configuración del frontend por entorno | `frontend/src/environments/`: `environment.development.ts` (desarrollo, `localhost`) y `environment.ts` (producción, `/api`). Es la convención de Angular 17+, que reemplazó a `environment.prod.ts`. |
+
+Ningún archivo de código pasa de unas 150 líneas, y los únicos valores de prueba (contraseña del admin, clave JWT) están en la configuración de desarrollo. En producción vienen de variables de entorno.
+
 ## Ejercicio 1 · API REST
 
 ### Arquitectura
