@@ -182,15 +182,17 @@ frontend/src/app/
 ├── shared/components/  Barra de búsqueda, estrellas, selector de imagen, toasts y modal de confirmación
 ├── shared/pipes/       imageSrc: resuelve las fotos subidas contra el origen de la API
 └── features/
-    ├── public/landing  Landing page para usuarios  (/)
-    └── admin/          Login, tabla de hoteles y formulario crear/editar  (/admin)
+    ├── public/         public.routes.ts + landing page para usuarios  (/)
+    └── admin/          admin.routes.ts + login, tabla de hoteles y formulario crear/editar  (/admin)
 ```
+
+- **Módulos por feature con lazy loading**: `app.routes.ts` solo declara dos áreas con `loadChildren` (`PUBLIC_ROUTES` y `ADMIN_ROUTES`). Es el equivalente standalone de los feature modules de Angular: cada área es dueña de sus rutas, y el código del admin no se descarga hasta que el usuario navega a `/admin` (el build genera chunks separados `admin-routes`, `hotel-list-component`, `hotel-form-component`...).
 
 - **Usuario** (`/`): introducción a la cadena, todos los hoteles en tarjetas y búsqueda por nombre y/o calificación (exacta o mínima). **Cada cambio en los filtros hace una petición a la API** (`GET /api/hotels?name=...&rating=...`); el frontend no filtra con JavaScript.
 - **Administrador** (`/admin`): inicio de sesión, tabla paginada con los mismos filtros, crear y editar con formularios reactivos validados (la imagen se puede **subir desde el computador o pegar como URL**, con vista previa), y eliminar con un modal de confirmación. Las rutas están protegidas por un guard y el token se envía con un interceptor.
 - **Manejo de errores**: un interceptor muestra un aviso cuando la API no responde, la sesión expira, el recurso no existe o hay un error del servidor. Los errores de validación (400) y de nombre repetido (409) se muestran en el formulario.
 - **Responsivo**: grid fluido para las tarjetas, menú hamburguesa en móvil, y la tabla del admin se convierte en tarjetas en pantallas pequeñas.
-- **Estado reactivo**: los listados se alimentan de un `BehaviorSubject` de filtros con `switchMap` (cancela búsquedas viejas) y se pintan con `async` pipe; el listado del admin se refresca solo después de eliminar. Componentes standalone, carga diferida por ruta y tipado estricto, sin `any`.
+- **Estado reactivo**: los listados se alimentan de un `BehaviorSubject` de filtros con `switchMap` (cancela búsquedas viejas) y se pintan con `async` pipe; el listado del admin se refresca solo después de eliminar. Componentes standalone y tipado estricto, sin `any`.
 
 La URL de la API se configura por entorno en `src/environments/`: `environment.development.ts` apunta a `http://localhost:5080/api` y en producción se usa `/api` detrás del mismo dominio (así funciona el nginx de Docker).
 
