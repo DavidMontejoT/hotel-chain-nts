@@ -3,7 +3,7 @@ using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using HotelChain.Application.Auth;
 using HotelChain.Application.Common;
-using HotelChain.Application.Hotels;
+using HotelChain.Application.Hotels.Dtos;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 
@@ -77,14 +77,16 @@ public class HotelsApiTests : IClassFixture<HotelsApiTests.ApiFactory>
     public async Task Admin_can_create_update_and_delete_a_hotel()
     {
         var client = await AdminClientAsync();
-        var request = new HotelRequest { Name = "Hotel de Prueba", City = "Cali", Address = "Calle 5", Rating = 3, PricePerNight = 120 };
+        var request = new CreateHotelDto { Name = "Hotel de Prueba", City = "Cali", Address = "Calle 5", Rating = 3, PricePerNight = 120 };
 
         var create = await client.PostAsJsonAsync("/api/hotels", request);
         Assert.Equal(HttpStatusCode.Created, create.StatusCode);
         var created = (await create.Content.ReadFromJsonAsync<HotelDto>())!;
 
-        request.Rating = 4;
-        var update = await client.PutAsJsonAsync($"/api/hotels/{created.Id}", request);
+        var update = await client.PutAsJsonAsync($"/api/hotels/{created.Id}", new UpdateHotelDto
+        {
+            Name = request.Name, City = request.City, Address = request.Address, Rating = 4, PricePerNight = 120
+        });
         Assert.Equal(4, (await update.Content.ReadFromJsonAsync<HotelDto>())!.Rating);
 
         var delete = await client.DeleteAsync($"/api/hotels/{created.Id}");

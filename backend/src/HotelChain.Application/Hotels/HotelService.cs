@@ -1,4 +1,5 @@
 using HotelChain.Application.Common;
+using HotelChain.Application.Hotels.Dtos;
 using HotelChain.Domain.Entities;
 using HotelChain.Domain.Repositories;
 
@@ -6,7 +7,7 @@ namespace HotelChain.Application.Hotels;
 
 public sealed class HotelService(IHotelRepository repository, TimeProvider clock) : IHotelService
 {
-    public async Task<PagedResult<HotelDto>> SearchAsync(HotelQuery query, CancellationToken ct = default)
+    public async Task<PagedResult<HotelDto>> SearchAsync(HotelQueryDto query, CancellationToken ct = default)
     {
         if (query.Rating.HasValue && query.MinRating.HasValue)
             throw new ValidationException("Use 'rating' o 'minRating', no ambos.");
@@ -25,23 +26,23 @@ public sealed class HotelService(IHotelRepository repository, TimeProvider clock
     public async Task<HotelDto> GetByIdAsync(int id, CancellationToken ct = default)
         => (await FindAsync(id, ct)).ToDto();
 
-    public async Task<HotelDto> CreateAsync(HotelRequest request, CancellationToken ct = default)
+    public async Task<HotelDto> CreateAsync(CreateHotelDto dto, CancellationToken ct = default)
     {
-        await EnsureUniqueNameAsync(request.Name, null, ct);
+        await EnsureUniqueNameAsync(dto.Name, null, ct);
 
         var hotel = new Hotel { CreatedAt = clock.GetUtcNow().UtcDateTime };
-        hotel.Apply(request);
+        hotel.Apply(dto);
 
         await repository.AddAsync(hotel, ct);
         return hotel.ToDto();
     }
 
-    public async Task<HotelDto> UpdateAsync(int id, HotelRequest request, CancellationToken ct = default)
+    public async Task<HotelDto> UpdateAsync(int id, UpdateHotelDto dto, CancellationToken ct = default)
     {
         var hotel = await FindAsync(id, ct);
-        await EnsureUniqueNameAsync(request.Name, id, ct);
+        await EnsureUniqueNameAsync(dto.Name, id, ct);
 
-        hotel.Apply(request);
+        hotel.Apply(dto);
         hotel.UpdatedAt = clock.GetUtcNow().UtcDateTime;
 
         await repository.UpdateAsync(hotel, ct);

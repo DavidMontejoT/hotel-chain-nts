@@ -1,5 +1,6 @@
 using HotelChain.Application.Common;
 using HotelChain.Application.Hotels;
+using HotelChain.Application.Hotels.Dtos;
 using HotelChain.Infrastructure.Persistence;
 using HotelChain.Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
@@ -16,7 +17,12 @@ public class HotelServiceTests
         return new HotelService(new HotelRepository(new HotelChainDbContext(options)), TimeProvider.System);
     }
 
-    private static HotelRequest Request(string name, int rating) => new()
+    private static CreateHotelDto Request(string name, int rating) => new()
+    {
+        Name = name, City = "Bogotá", Address = "Calle 1 # 2-3", Rating = rating, PricePerNight = 100
+    };
+
+    private static UpdateHotelDto UpdateRequest(string name, int rating) => new()
     {
         Name = name, City = "Bogotá", Address = "Calle 1 # 2-3", Rating = rating, PricePerNight = 100
     };
@@ -28,7 +34,7 @@ public class HotelServiceTests
         await service.CreateAsync(Request("Hotel Andino", 4));
         await service.CreateAsync(Request("Casa del Mar", 3));
 
-        var result = await service.SearchAsync(new HotelQuery { Name = "andi" });
+        var result = await service.SearchAsync(new HotelQueryDto { Name = "andi" });
 
         Assert.Single(result.Items);
         Assert.Equal("Hotel Andino", result.Items[0].Name);
@@ -42,7 +48,7 @@ public class HotelServiceTests
         await service.CreateAsync(Request("Aurora Dos", 3));
         await service.CreateAsync(Request("Otro", 5));
 
-        var result = await service.SearchAsync(new HotelQuery { Name = "aurora", Rating = 5 });
+        var result = await service.SearchAsync(new HotelQueryDto { Name = "aurora", Rating = 5 });
 
         Assert.Equal(1, result.Total);
         Assert.Equal("Aurora Uno", result.Items[0].Name);
@@ -56,7 +62,7 @@ public class HotelServiceTests
         await service.CreateAsync(Request("B", 4));
         await service.CreateAsync(Request("C", 5));
 
-        var result = await service.SearchAsync(new HotelQuery { MinRating = 4 });
+        var result = await service.SearchAsync(new HotelQueryDto { MinRating = 4 });
 
         Assert.Equal(["C", "B"], result.Items.Select(h => h.Name));
     }
@@ -66,7 +72,7 @@ public class HotelServiceTests
     {
         var service = CreateService();
         await Assert.ThrowsAsync<ValidationException>(() =>
-            service.SearchAsync(new HotelQuery { Rating = 3, MinRating = 2 }));
+            service.SearchAsync(new HotelQueryDto { Rating = 3, MinRating = 2 }));
     }
 
     [Fact]
@@ -82,7 +88,7 @@ public class HotelServiceTests
     public async Task Update_and_delete_unknown_hotel_throw_not_found()
     {
         var service = CreateService();
-        await Assert.ThrowsAsync<NotFoundException>(() => service.UpdateAsync(99, Request("X", 3)));
+        await Assert.ThrowsAsync<NotFoundException>(() => service.UpdateAsync(99, UpdateRequest("X", 3)));
         await Assert.ThrowsAsync<NotFoundException>(() => service.DeleteAsync(99));
     }
 
@@ -92,7 +98,7 @@ public class HotelServiceTests
         var service = CreateService();
         var created = await service.CreateAsync(Request("Hotel Andino", 4));
 
-        var updated = await service.UpdateAsync(created.Id, Request("Hotel Andino Plus", 5));
+        var updated = await service.UpdateAsync(created.Id, UpdateRequest("Hotel Andino Plus", 5));
 
         Assert.Equal("Hotel Andino Plus", updated.Name);
         Assert.Equal(5, updated.Rating);
