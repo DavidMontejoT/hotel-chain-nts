@@ -113,8 +113,18 @@ También hay una colección de Postman en [`docs/aurora-hoteles.postman_collecti
 Un hotel puede tener una URL de imagen externa (`https://...`) o una foto subida desde el panel de administración:
 
 1. El frontend envía el archivo a `POST /api/images` (`multipart/form-data`, campo `file`).
-2. La API valida el **contenido real** del archivo (firma JPG, PNG, WEBP o GIF, no solo la extensión) y que no supere 5 MB, lo guarda con un nombre aleatorio y responde `{ "url": "/uploads/<archivo>" }`.
-3. Esa URL se guarda en el hotel y la API sirve el archivo como estático en `/uploads`.
+2. La API valida el **contenido real** del archivo (firma JPG, PNG, WEBP o GIF, no solo la extensión) y que no supere 10 MB.
+3. La **optimiza a 400 KB o menos con la mayor resolución posible** (ver abajo), la guarda con un nombre aleatorio y responde `{ "url": "/uploads/<archivo>", "width", "height", "sizeBytes" }`. El formulario muestra esas dimensiones y el peso final.
+4. Esa URL se guarda en el hotel y la API sirve el archivo como estático en `/uploads`.
+
+**Optimización (400 KB sin perder calidad visible)** – `SkiaImageOptimizer`, con SkiaSharp (licencia MIT):
+
+- Si la foto ya pesa 400 KB o menos, se guarda **tal cual**, sin recomprimirla, así que no pierde nada.
+- Si pesa más, se codifica en **WebP con calidad fija 85**, un nivel donde la compresión no se nota en una foto. Lo que se ajusta es la **resolución**, no la calidad.
+- Para encontrar la resolución máxima que cabe en 400 KB, se codifica una muestra pequeña y se mide cuántos bytes ocupa cada píxel de esa foto en particular. Con eso se estima la escala, y una búsqueda binaria la afina. El resultado queda a pocos píxeles del máximo posible (los tests verifican que una versión 10 % más grande ya no cabe).
+- Se respeta la orientación EXIF de las fotos de celular y se quitan los metadatos (GPS, cámara).
+
+Con "Usar URL" la imagen está alojada en otro servidor, así que la API no puede controlar su peso. Para cumplir el límite de 400 KB, lo recomendado es subir el archivo.
 
 Al cambiar o eliminar la foto de un hotel, el archivo anterior se borra. El almacenamiento está detrás de la interfaz `IImageStorage`, así que se puede cambiar por Azure Blob o S3 sin tocar el resto. La carpeta se configura con `ImageStorage:RootPath` (por defecto `uploads/`, ignorada por git), y en Docker se monta como volumen.
 
@@ -170,7 +180,7 @@ cd backend
 dotnet test
 ```
 
-22 pruebas: filtros por nombre y calificación (combinados, exacta y mínima), búsqueda sin tildes, nombre duplicado, 404, autorización (401 sin token), validaciones (400), el flujo CRUD completo contra la API y la subida de fotos (archivo válido, archivo falso con extensión de imagen, sin token y limpieza del archivo al borrar el hotel).
+27 pruebas: filtros por nombre y calificación (combinados, exacta y mínima), búsqueda sin tildes, nombre duplicado, 404, autorización (401 sin token), validaciones (400), el flujo CRUD completo contra la API y la subida de fotos (archivo válido, archivo falso con extensión de imagen, sin token y limpieza del archivo al borrar el hotel) y la optimización de imágenes (una foto grande queda en 400 KB o menos manteniendo la proporción, la resolución es prácticamente la máxima que cabe, una foto pequeña no se toca y un archivo corrupto se rechaza).
 
 ## Ejercicio 2 · Frontend Angular
 
@@ -191,7 +201,7 @@ frontend/src/app/
 - **Módulos por feature con lazy loading**: `app.routes.ts` solo declara dos áreas con `loadChildren` (`PUBLIC_ROUTES` y `ADMIN_ROUTES`). Es el equivalente standalone de los feature modules de Angular: cada área es dueña de sus rutas, y el código del admin no se descarga hasta que el usuario navega a `/admin` (el build genera chunks separados `admin-routes`, `hotel-list-component`, `hotel-form-component`...).
 
 - **Usuario** (`/`): introducción a la cadena, todos los hoteles en tarjetas y búsqueda por nombre y/o calificación (exacta o mínima). **Cada cambio en los filtros hace una petición a la API** (`GET /api/hotels?name=...&rating=...`); el frontend no filtra con JavaScript.
-- **Administrador** (`/admin`): inicio de sesión, tabla paginada con los mismos filtros, crear y editar con formularios reactivos validados (la imagen se puede **subir desde el computador o pegar como URL**, con vista previa), y eliminar con un modal de confirmación. Las rutas están protegidas por un guard y el token se envía con un interceptor.
+- **Administrador** (`/admin`): inicio de sesión, tabla paginada con los mismos filtros, crear y editar con formularios reactivos validados (la imagen se puede **subir desde el computador**, y la API la optimiza a 400 KB o menos, **o pegar como URL**, con vista previa), y eliminar con un modal de confirmación. Las rutas están protegidas por un guard y el token se envía con un interceptor.
 - **Manejo de errores**: un interceptor muestra un aviso cuando la API no responde, la sesión expira, el recurso no existe o hay un error del servidor. Los errores de validación (400) y de nombre repetido (409) se muestran en el formulario.
 - **Responsivo**: grid fluido para las tarjetas, menú hamburguesa en móvil, y la tabla del admin se convierte en tarjetas en pantallas pequeñas.
 - **Estado reactivo**: los listados se alimentan de un `BehaviorSubject` de filtros con `switchMap` (cancela búsquedas viejas) y se pintan con `async` pipe; el listado del admin se refresca solo después de eliminar. Componentes standalone y tipado estricto, sin `any`.
@@ -205,7 +215,7 @@ npm run build      # build de producción en dist/
 npm test           # pruebas unitarias (Karma + Jasmine)
 ```
 
-27 pruebas con `HttpClient` simulado (`provideHttpClientTesting`): `HotelService` (filtros como query params, GET, POST, PUT y DELETE), el interceptor de errores, las rutas con carga diferida, el formulario (validaciones, botón deshabilitado, POST y PUT), la landing (los filtros viajan a la API como `?name=&rating=` y se muestra lo que responde) y el listado del admin (confirmar, eliminar y refrescar).
+29 pruebas con `HttpClient` simulado (`provideHttpClientTesting`): `HotelService` (filtros como query params, GET, POST, PUT y DELETE), el selector de imagen (sube la foto y muestra el tamaño optimizado; rechaza más de 10 MB), el interceptor de errores, las rutas con carga diferida, el formulario (validaciones, botón deshabilitado, POST y PUT), la landing (los filtros viajan a la API como `?name=&rating=` y se muestra lo que responde) y el listado del admin (confirmar, eliminar y refrescar).
 
 ## Decisiones de alcance
 
@@ -213,7 +223,7 @@ Todo lo obligatorio (CRUD, filtros en el servidor, API .NET, Angular, panel de a
 
 - **Autenticación mínima**: el enunciado distingue al Administrador del Usuario, y sin protección cualquiera podría borrar hoteles. Por eso hay un único usuario administrador configurado por entorno y un token JWT. No hay registro, base de usuarios ni gestión de roles.
 - **Docker es opcional**: el proyecto corre sin Docker con `dotnet run` y `npm start` (SQLite, sin instalar nada). `docker compose` solo sirve para ver la configuración de producción con SQL Server.
-- **Fotos**: el formulario acepta una URL o un archivo subido. La subida es un endpoint pequeño detrás de la interfaz `IImageStorage`, que valida el tipo real del archivo y un máximo de 5 MB. Así, cambiar a un almacenamiento en la nube sería solo una implementación nueva.
+- **Fotos**: el enunciado pide gestionar una imagen por hotel, de máximo 400 KB y con la mayor resolución posible. La subida y la optimización están detrás de las interfaces `IImageStorage` e `IImageOptimizer`, así que pasar a un almacenamiento en la nube sería solo una implementación nueva. La opción de pegar una URL se mantiene para fotos ya publicadas.
 - **Pruebas enfocadas**: unitarias e integración de la API con xUnit, y unitarias del frontend con Karma. Cubren lo que pide la prueba: filtros, validaciones, CRUD y manejo de errores. No hay pruebas E2E.
 - **Sin patrones de más**: para una sola entidad no se usan CQRS, MediatR, GraphQL, i18n ni microservicios. Un servicio de aplicación y un repositorio son suficientes.
 
