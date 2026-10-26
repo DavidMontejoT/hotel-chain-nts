@@ -6,13 +6,15 @@ import { HotelRequest } from '../../../core/models/hotel.model';
 import { errorMessage, isHandledGlobally } from '../../../core/services/error-message';
 import { HotelService } from '../../../core/services/hotel.service';
 import { ToastService } from '../../../core/services/toast.service';
+import { ImagePickerComponent } from '../../../shared/components/image-picker.component';
 
-const URL_PATTERN = /^https?:\/\/.+/i;
+/** External http(s) URL or an image uploaded to the API. */
+const IMAGE_URL_PATTERN = /^(https?:\/\/.+|\/uploads\/[^/]+)$/i;
 
 /** Shared form for creating and editing hotels. */
 @Component({
   selector: 'app-hotel-form',
-  imports: [ReactiveFormsModule, RouterLink],
+  imports: [ReactiveFormsModule, RouterLink, ImagePickerComponent],
   templateUrl: './hotel-form.component.html',
   styleUrl: './hotel-form.component.scss',
 })
@@ -36,7 +38,7 @@ export class HotelFormComponent implements OnInit {
     description: ['', Validators.maxLength(2000)],
     rating: [3, [Validators.required, Validators.min(1), Validators.max(5)]],
     pricePerNight: [0, [Validators.required, Validators.min(0)]],
-    imageUrl: ['', [Validators.maxLength(500), Validators.pattern(URL_PATTERN)]],
+    imageUrl: ['', [Validators.maxLength(500), Validators.pattern(IMAGE_URL_PATTERN)]],
   });
 
   protected get isEdit(): boolean {

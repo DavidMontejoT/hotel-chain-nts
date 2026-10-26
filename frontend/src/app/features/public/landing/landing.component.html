@@ -40,7 +40,7 @@
         <li class="card hotel">
           <div class="photo">
             @if (hotel.imageUrl && !brokenImages().has(hotel.id)) {
-              <img [src]="hotel.imageUrl" [alt]="hotel.name" loading="lazy" (error)="markBroken(hotel.id)" />
+              <img [src]="hotel.imageUrl | imageSrc" [alt]="hotel.name" loading="lazy" (error)="markBroken(hotel.id)" />
             } @else {
               <span aria-hidden="true">✦</span>
             }

@@ -6,10 +6,11 @@ import { errorMessage, isHandledGlobally } from '../../../core/services/error-me
 import { HotelService } from '../../../core/services/hotel.service';
 import { HotelSearchComponent } from '../../../shared/components/hotel-search.component';
 import { StarRatingComponent } from '../../../shared/components/star-rating.component';
+import { ImageSrcPipe } from '../../../shared/pipes/image-src.pipe';
 
 @Component({
   selector: 'app-landing',
-  imports: [CurrencyPipe, HotelSearchComponent, StarRatingComponent],
+  imports: [CurrencyPipe, HotelSearchComponent, StarRatingComponent, ImageSrcPipe],
   templateUrl: './landing.component.html',
   styleUrl: './landing.component.scss',
 })

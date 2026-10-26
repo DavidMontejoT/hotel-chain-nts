@@ -51,13 +51,13 @@
         }
       </label>
 
-      <label class="field span-2">
-        <span>URL de la imagen</span>
-        <input type="url" formControlName="imageUrl" placeholder="https://…" />
+      <div class="field span-2">
+        <span>Imagen</span>
+        <app-image-picker formControlName="imageUrl" />
         @if (invalid('imageUrl')) {
           <span class="error-text">Debe ser una URL que empiece por http:// o https://</span>
         }
-      </label>
+      </div>
 
       <label class="field span-2">
         <span>Descripción</span>
