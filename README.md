@@ -190,7 +190,7 @@ frontend/src/app/
 - **Administrador** (`/admin`): inicio de sesión, tabla paginada con los mismos filtros, crear y editar con formularios reactivos validados (la imagen se puede **subir desde el computador o pegar como URL**, con vista previa), y eliminar con un modal de confirmación. Las rutas están protegidas por un guard y el token se envía con un interceptor.
 - **Manejo de errores**: un interceptor muestra un aviso cuando la API no responde, la sesión expira, el recurso no existe o hay un error del servidor. Los errores de validación (400) y de nombre repetido (409) se muestran en el formulario.
 - **Responsivo**: grid fluido para las tarjetas, menú hamburguesa en móvil, y la tabla del admin se convierte en tarjetas en pantallas pequeñas.
-- Componentes standalone, carga diferida por ruta y signals.
+- **Estado reactivo**: los listados se alimentan de un `BehaviorSubject` de filtros con `switchMap` (cancela búsquedas viejas) y se pintan con `async` pipe; el listado del admin se refresca solo después de eliminar. Componentes standalone, carga diferida por ruta y tipado estricto, sin `any`.
 
 La URL de la API se configura por entorno en `src/environments/`: `environment.development.ts` apunta a `http://localhost:5080/api` y en producción se usa `/api` detrás del mismo dominio (así funciona el nginx de Docker).
 
@@ -200,6 +200,8 @@ npm start          # desarrollo
 npm run build      # build de producción en dist/
 npm test           # pruebas unitarias (Karma + Jasmine)
 ```
+
+20 pruebas con `HttpClient` simulado (`provideHttpClientTesting`): `HotelService`, el interceptor de errores, el formulario (validaciones, botón deshabilitado, POST y PUT), la landing (los filtros viajan a la API como `?name=&rating=` y se muestra lo que responde) y el listado del admin (confirmar, eliminar y refrescar).
 
 ## Prueba manual sugerida
 
