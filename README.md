@@ -211,6 +211,7 @@ Todo lo obligatorio (CRUD, filtros en el servidor, API .NET, Angular, panel de a
 
 - **Autenticación mínima**: el enunciado distingue al Administrador del Usuario, y sin protección cualquiera podría borrar hoteles. Por eso hay un único usuario administrador configurado por entorno y un token JWT. No hay registro, base de usuarios ni gestión de roles.
 - **Docker es opcional**: el proyecto corre sin Docker con `dotnet run` y `npm start` (SQLite, sin instalar nada). `docker compose` solo sirve para ver la configuración de producción con SQL Server.
+- **Fotos**: el formulario acepta una URL o un archivo subido. La subida es un endpoint pequeño detrás de la interfaz `IImageStorage`, que valida el tipo real del archivo y un máximo de 5 MB. Así, cambiar a un almacenamiento en la nube sería solo una implementación nueva.
 - **Pruebas enfocadas**: unitarias e integración de la API con xUnit, y unitarias del frontend con Karma. Cubren lo que pide la prueba: filtros, validaciones, CRUD y manejo de errores. No hay pruebas E2E.
 - **Sin patrones de más**: para una sola entidad no se usan CQRS, MediatR, GraphQL, i18n ni microservicios. Un servicio de aplicación y un repositorio son suficientes.
 
