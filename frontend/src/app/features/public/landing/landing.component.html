@@ -1,0 +1,63 @@
+<section class="hero">
+  <div class="container hero-inner">
+    <p class="eyebrow">Cadena hotelera</p>
+    <h1>Descansa como en casa, en cualquier ciudad</h1>
+    <p class="lead">
+      Aurora Hoteles reúne hoteles de 1 a 5 estrellas en los mejores destinos del país. Desde hostales
+      sencillos hasta haciendas con spa, todos con la misma atención cálida y cercana.
+    </p>
+    <a class="btn" href="#hoteles">Ver hoteles</a>
+  </div>
+</section>
+
+<section class="container highlights" aria-label="Por qué elegirnos">
+  <div class="card highlight"><strong>Destinos únicos</strong><span class="muted">Playa, montaña y ciudad.</span></div>
+  <div class="card highlight"><strong>Calificación verificada</strong><span class="muted">Cada hotel con su categoría en estrellas.</span></div>
+  <div class="card highlight"><strong>Atención 24/7</strong><span class="muted">Estamos contigo durante toda tu estadía.</span></div>
+</section>
+
+<section id="hoteles" class="container page">
+  <div class="page-header">
+    <h2>Nuestros hoteles</h2>
+    @if (!loading() && !error()) {
+      <span class="muted">{{ total() }} {{ total() === 1 ? 'hotel encontrado' : 'hoteles encontrados' }}</span>
+    }
+  </div>
+
+  <div class="card filters">
+    <app-hotel-search (filterChange)="load($event)" />
+  </div>
+
+  @if (error()) {
+    <div class="alert alert-error" role="alert">{{ error() }}</div>
+  } @else if (loading()) {
+    <p class="empty">Cargando hoteles…</p>
+  } @else if (hotels().length === 0) {
+    <p class="empty">No encontramos hoteles con esos criterios.</p>
+  } @else {
+    <ul class="grid">
+      @for (hotel of hotels(); track hotel.id) {
+        <li class="card hotel">
+          <div class="photo">
+            @if (hotel.imageUrl && !brokenImages().has(hotel.id)) {
+              <img [src]="hotel.imageUrl" [alt]="hotel.name" loading="lazy" (error)="markBroken(hotel.id)" />
+            } @else {
+              <span aria-hidden="true">✦</span>
+            }
+          </div>
+          <div class="body">
+            <app-star-rating [value]="hotel.rating" />
+            <h3>{{ hotel.name }}</h3>
+            <p class="muted city">{{ hotel.city }} · {{ hotel.address }}</p>
+            @if (hotel.description) {
+              <p class="desc">{{ hotel.description }}</p>
+            }
+            <p class="price">
+              {{ hotel.pricePerNight | currency: 'COP' : 'symbol-narrow' : '1.0-0' }} <span class="muted">/ noche</span>
+            </p>
+          </div>
+        </li>
+      }
+    </ul>
+  }
+</section>
