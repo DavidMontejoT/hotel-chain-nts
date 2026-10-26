@@ -104,4 +104,35 @@ public class HotelServiceTests
         Assert.Equal(5, updated.Rating);
         Assert.NotNull(updated.UpdatedAt);
     }
+
+    [Fact]
+    public async Task Search_ignores_accents_and_case()
+    {
+        var service = CreateService();
+        await service.CreateAsync(Request("Aurora Bogotá Centro", 4));
+
+        var result = await service.SearchAsync(new HotelQueryDto { Name = "BOGOTA" });
+
+        Assert.Single(result.Items);
+    }
+
+    [Fact]
+    public async Task Create_rejects_name_that_only_differs_in_accents()
+    {
+        var service = CreateService();
+        await service.CreateAsync(Request("Hotel Medellín", 4));
+
+        await Assert.ThrowsAsync<ConflictException>(() => service.CreateAsync(Request("hotel medellin", 3)));
+    }
+
+    [Fact]
+    public async Task Update_keeps_its_own_name_without_conflict()
+    {
+        var service = CreateService();
+        var created = await service.CreateAsync(Request("Hotel Andino", 4));
+
+        var updated = await service.UpdateAsync(created.Id, UpdateRequest("Hotel Andino", 5));
+
+        Assert.Equal(5, updated.Rating);
+    }
 }

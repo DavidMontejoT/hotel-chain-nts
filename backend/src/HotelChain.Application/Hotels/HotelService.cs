@@ -1,5 +1,6 @@
 using HotelChain.Application.Common;
 using HotelChain.Application.Hotels.Dtos;
+using HotelChain.Domain.Common;
 using HotelChain.Domain.Entities;
 using HotelChain.Domain.Repositories;
 
@@ -13,7 +14,7 @@ public sealed class HotelService(IHotelRepository repository, TimeProvider clock
             throw new ValidationException("Use 'rating' o 'minRating', no ambos.");
 
         var criteria = new HotelSearchCriteria(
-            string.IsNullOrWhiteSpace(query.Name) ? null : query.Name.Trim(),
+            string.IsNullOrWhiteSpace(query.Name) ? null : TextNormalizer.ForSearch(query.Name),
             query.Rating,
             query.MinRating,
             query.Page,
@@ -28,10 +29,9 @@ public sealed class HotelService(IHotelRepository repository, TimeProvider clock
 
     public async Task<HotelDto> CreateAsync(CreateHotelDto dto, CancellationToken ct = default)
     {
-        await EnsureUniqueNameAsync(dto.Name, null, ct);
-
         var hotel = new Hotel { CreatedAt = clock.GetUtcNow().UtcDateTime };
         hotel.Apply(dto);
+        await EnsureUniqueNameAsync(hotel, ct);
 
         await repository.AddAsync(hotel, ct);
         return hotel.ToDto();
@@ -40,10 +40,9 @@ public sealed class HotelService(IHotelRepository repository, TimeProvider clock
     public async Task<HotelDto> UpdateAsync(int id, UpdateHotelDto dto, CancellationToken ct = default)
     {
         var hotel = await FindAsync(id, ct);
-        await EnsureUniqueNameAsync(dto.Name, id, ct);
-
         hotel.Apply(dto);
         hotel.UpdatedAt = clock.GetUtcNow().UtcDateTime;
+        await EnsureUniqueNameAsync(hotel, ct);
 
         await repository.UpdateAsync(hotel, ct);
         return hotel.ToDto();
@@ -59,9 +58,10 @@ public sealed class HotelService(IHotelRepository repository, TimeProvider clock
         => await repository.GetByIdAsync(id, ct)
            ?? throw new NotFoundException($"No existe un hotel con id {id}.");
 
-    private async Task EnsureUniqueNameAsync(string name, int? excludeId, CancellationToken ct)
+    private async Task EnsureUniqueNameAsync(Hotel hotel, CancellationToken ct)
     {
-        if (await repository.ExistsByNameAsync(name.Trim(), excludeId, ct))
-            throw new ConflictException($"Ya existe un hotel con el nombre '{name.Trim()}'.");
+        var excludeId = hotel.Id == 0 ? (int?)null : hotel.Id;
+        if (await repository.ExistsByNormalizedNameAsync(hotel.NormalizedName, excludeId, ct))
+            throw new ConflictException($"Ya existe un hotel con el nombre '{hotel.Name}'.");
     }
 }
