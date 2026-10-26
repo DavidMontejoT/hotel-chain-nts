@@ -36,7 +36,7 @@ export class HotelFormComponent implements OnInit {
     city: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(100)]],
     address: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(250)]],
     description: ['', Validators.maxLength(2000)],
-    rating: [3, [Validators.required, Validators.min(1), Validators.max(5)]],
+    rating: [null as number | null, [Validators.required, Validators.min(1), Validators.max(5)]],
     pricePerNight: [0, [Validators.required, Validators.min(0)]],
     imageUrl: ['', [Validators.maxLength(500), Validators.pattern(IMAGE_URL_PATTERN)]],
   });
@@ -80,6 +80,7 @@ export class HotelFormComponent implements OnInit {
     const value = this.form.getRawValue();
     const request: HotelRequest = {
       ...value,
+      rating: Number(value.rating),
       description: value.description.trim() || null,
       imageUrl: value.imageUrl.trim() || null,
     };
