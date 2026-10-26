@@ -1,0 +1,37 @@
+<header class="topbar">
+  <div class="container bar">
+    <a routerLink="/" class="brand" (click)="menuOpen.set(false)">
+      <span class="logo" aria-hidden="true">✦</span> Aurora Hoteles
+    </a>
+
+    <button
+      class="menu-toggle"
+      type="button"
+      [attr.aria-expanded]="menuOpen()"
+      aria-controls="main-nav"
+      aria-label="Abrir menú"
+      (click)="menuOpen.set(!menuOpen())"
+    >
+      ☰
+    </button>
+
+    <nav id="main-nav" class="nav" [class.open]="menuOpen()" (click)="menuOpen.set(false)">
+      <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">Inicio</a>
+      @if (auth.isAdmin()) {
+        <a routerLink="/admin/hotels" routerLinkActive="active">Administrar hoteles</a>
+        <span class="user">{{ auth.username() }}</span>
+        <button type="button" class="btn btn-ghost btn-sm" (click)="auth.logout()">Salir</button>
+      } @else {
+        <a routerLink="/admin/login" routerLinkActive="active">Administrador</a>
+      }
+    </nav>
+  </div>
+</header>
+
+<main>
+  <router-outlet />
+</main>
+
+<footer class="footer">
+  <div class="container">© {{ year }} Aurora Hoteles · Cadena hotelera de demostración</div>
+</footer>
