@@ -106,6 +106,8 @@ curl -X POST http://localhost:5080/api/hotels \
   -d '{"name":"Hotel Test 5 estrellas","city":"Bogotá","address":"Calle 100 # 10-20","rating":5,"pricePerNight":500000}'
 ```
 
+También hay una colección de Postman en [`docs/aurora-hoteles.postman_collection.json`](docs/aurora-hoteles.postman_collection.json) con todas las peticiones (filtros, login y CRUD). El login guarda el token en una variable, así que basta con ejecutar "Login administrador" primero.
+
 ### Fotos de los hoteles
 
 Un hotel puede tener una URL de imagen externa (`https://...`) o una foto subida desde el panel de administración:
@@ -214,6 +216,16 @@ Todo lo obligatorio (CRUD, filtros en el servidor, API .NET, Angular, panel de a
 - **Fotos**: el formulario acepta una URL o un archivo subido. La subida es un endpoint pequeño detrás de la interfaz `IImageStorage`, que valida el tipo real del archivo y un máximo de 5 MB. Así, cambiar a un almacenamiento en la nube sería solo una implementación nueva.
 - **Pruebas enfocadas**: unitarias e integración de la API con xUnit, y unitarias del frontend con Karma. Cubren lo que pide la prueba: filtros, validaciones, CRUD y manejo de errores. No hay pruebas E2E.
 - **Sin patrones de más**: para una sola entidad no se usan CQRS, MediatR, GraphQL, i18n ni microservicios. Un servicio de aplicación y un repositorio son suficientes.
+
+## Mejoras si tuviera más tiempo
+
+- **Ordenamiento a elección del usuario** (precio, nombre), además del orden actual por calificación de mayor a menor.
+- **Búsqueda por ciudad y rango de precio**, siguiendo el mismo patrón de `HotelQueryDto` y `IQueryable`.
+- **Fotos en la nube** (Azure Blob Storage o S3) con una nueva implementación de `IImageStorage`, sin tocar el resto del código.
+- **Administradores en base de datos**, con contraseñas hasheadas y refresh tokens, en lugar de un único usuario por configuración.
+- **Pruebas E2E** con Playwright del flujo de la "Prueba manual sugerida".
+- **CI** con GitHub Actions que corra las pruebas y el build en cada push.
+- **Caché** del listado público con ETag o caché de salida, para las búsquedas más frecuentes.
 
 ## Prueba manual sugerida
 
