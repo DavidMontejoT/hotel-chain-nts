@@ -1,7 +1,8 @@
-<header class="topbar">
+<header class="topbar glass-bar">
   <div class="container bar">
     <a routerLink="/" class="brand" (click)="menuOpen.set(false)">
-      <span class="logo" aria-hidden="true">✦</span> Aurora Hoteles
+      <span class="brand-mark" aria-hidden="true">AURORA</span>
+      <span class="brand-name">Aurora Hoteles</span>
     </a>
 
     <button
@@ -17,12 +18,13 @@
 
     <nav id="main-nav" class="nav" [class.open]="menuOpen()" (click)="menuOpen.set(false)">
       <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">Inicio</a>
+      <a href="/#hoteles">Hoteles</a>
       @if (auth.isAdmin()) {
         <a routerLink="/admin/hotels" routerLinkActive="active">Administrar hoteles</a>
         <span class="user">{{ auth.username() }}</span>
         <button type="button" class="btn btn-ghost btn-sm" (click)="auth.logout()">Salir</button>
       } @else {
-        <a routerLink="/admin/login" routerLinkActive="active">Administrador</a>
+        <a routerLink="/admin/login" routerLinkActive="active" class="login-link">Administrador</a>
       }
     </nav>
   </div>
@@ -33,7 +35,42 @@
 </main>
 
 <footer class="footer">
-  <div class="container">© {{ year }} Aurora Hoteles · Cadena hotelera de demostración</div>
+  <div class="container">
+    <div class="footer-cols">
+      <div>
+        <p class="footer-brand">Aurora Hoteles</p>
+        <p class="footer-text">Hoteles de 1 a 5 estrellas en los destinos más lindos de Colombia.</p>
+      </div>
+      <div>
+        <p class="footer-title">Destinos</p>
+        <ul>
+          <li>Cartagena</li>
+          <li>Bogotá</li>
+          <li>Medellín</li>
+          <li>Santa Marta</li>
+        </ul>
+      </div>
+      <div>
+        <p class="footer-title">Para huéspedes</p>
+        <ul>
+          <li><a href="/#hoteles">Buscar hoteles</a></li>
+          <li>Atención 24/7</li>
+          <li>Preguntas frecuentes</li>
+        </ul>
+      </div>
+      <div>
+        <p class="footer-title">Empresa</p>
+        <ul>
+          <li>Acerca de Aurora</li>
+          <li><a routerLink="/admin/login">Acceso administrador</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© {{ year }} Aurora Hoteles · Cadena hotelera de demostración</span>
+      <span>Español · COP</span>
+    </div>
+  </div>
 </footer>
 
 <app-toast-container />

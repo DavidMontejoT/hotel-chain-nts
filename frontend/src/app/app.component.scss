@@ -1,34 +1,70 @@
 :host { display: flex; flex-direction: column; min-height: 100vh; }
 main { flex: 1; }
 
+/* Frosted header that lets the page scroll underneath it. */
 .topbar {
-  position: sticky; top: 0; z-index: 10;
-  background: var(--c-surface); border-bottom: 1px solid var(--c-border);
+  position: sticky; top: 0; z-index: 20;
+  background: rgb(255 255 255 / .7);
+  border-bottom: 1px solid rgb(255 255 255 / .6);
+  box-shadow: 0 4px 24px rgb(31 38 55 / .06);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
 }
-.bar { display: flex; align-items: center; justify-content: space-between; height: 60px; gap: 16px; }
-.brand { font-weight: 700; font-size: 1.15rem; color: var(--c-text); text-decoration: none; }
-.logo { color: var(--c-primary); }
+.bar { display: flex; align-items: center; justify-content: space-between; height: 72px; gap: 16px; }
 
-.nav { display: flex; align-items: center; gap: 20px; }
-.nav a { color: var(--c-muted); text-decoration: none; font-weight: 500; }
-.nav a.active, .nav a:hover { color: var(--c-primary); }
+.brand { display: flex; align-items: center; gap: 12px; color: var(--c-ink); text-decoration: none; }
+.brand-mark {
+  display: grid; place-items: center; height: 72px; padding: 0 16px;
+  background: var(--c-ink); color: #fff;
+  font-size: .7rem; font-weight: 700; letter-spacing: .28em;
+  border-bottom: 3px solid var(--c-accent);
+}
+.brand-name { font-weight: 700; font-size: 1.1rem; letter-spacing: -.01em; }
+
+.nav { display: flex; align-items: center; gap: 28px; }
+.nav a { color: var(--c-ink); text-decoration: none; font-weight: 500; font-size: .95rem; position: relative; }
+.nav a::after {
+  content: ''; position: absolute; left: 0; right: 0; bottom: -6px; height: 2px;
+  background: var(--c-accent); transform: scaleX(0); transition: transform .2s ease;
+}
+.nav a.active::after, .nav a:hover::after { transform: scaleX(1); }
 .user { color: var(--c-muted); font-size: .9rem; }
 
 .menu-toggle {
-  display: none; background: none; border: 1px solid var(--c-border);
-  border-radius: 8px; font-size: 1.2rem; padding: 4px 10px; color: var(--c-text); cursor: pointer;
+  display: none; background: rgb(255 255 255 / .6); border: 1px solid var(--c-border);
+  border-radius: var(--radius-pill); font-size: 1.1rem; padding: 6px 14px; color: var(--c-ink); cursor: pointer;
 }
 
-@media (max-width: 720px) {
+@media (max-width: 760px) {
+  .brand-name { display: none; }
   .menu-toggle { display: block; }
   .nav {
-    display: none; position: absolute; top: 60px; left: 0; right: 0;
+    display: none; position: absolute; top: 72px; left: 0; right: 0;
     flex-direction: column; align-items: stretch; gap: 0;
-    background: var(--c-surface); border-bottom: 1px solid var(--c-border);
+    background: rgb(255 255 255 / .92);
+    -webkit-backdrop-filter: var(--glass-blur); backdrop-filter: var(--glass-blur);
+    border-bottom: 1px solid var(--c-border);
   }
   .nav.open { display: flex; }
   .nav > * { padding: 14px 16px; border-top: 1px solid var(--c-border); }
+  .nav a::after { display: none; }
   .nav .btn { margin: 8px 16px; }
 }
 
-.footer { border-top: 1px solid var(--c-border); padding: 24px 0; color: var(--c-muted); font-size: .875rem; text-align: center; }
+.footer { background: #1c1c1c; color: #e9e9e9; padding: 56px 0 28px; margin-top: 24px; }
+.footer-cols { display: grid; gap: 32px; grid-template-columns: 2fr repeat(3, 1fr); }
+.footer-brand { font-size: 1.25rem; font-weight: 700; margin: 0 0 8px; color: #fff; }
+.footer-text { color: #b5b5b5; margin: 0; max-width: 320px; }
+.footer-title { font-weight: 600; color: #fff; margin: 0 0 12px; }
+.footer ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; color: #b5b5b5; }
+.footer a { color: inherit; text-decoration: none; }
+.footer a:hover { color: #fff; }
+.footer-bottom {
+  display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px;
+  margin-top: 40px; padding-top: 20px; border-top: 1px solid #3a3a3a; font-size: .85rem; color: #b5b5b5;
+}
+
+@media (max-width: 760px) {
+  .footer-cols { grid-template-columns: 1fr 1fr; }
+  .footer-cols > :first-child { grid-column: 1 / -1; }
+}
