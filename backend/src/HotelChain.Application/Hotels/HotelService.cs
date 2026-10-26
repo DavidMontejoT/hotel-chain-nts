@@ -3,10 +3,11 @@ using HotelChain.Application.Hotels.Dtos;
 using HotelChain.Domain.Common;
 using HotelChain.Domain.Entities;
 using HotelChain.Domain.Repositories;
+using Microsoft.Extensions.Logging;
 
 namespace HotelChain.Application.Hotels;
 
-public sealed class HotelService(IHotelRepository repository, TimeProvider clock) : IHotelService
+public sealed class HotelService(IHotelRepository repository, TimeProvider clock, ILogger<HotelService> logger) : IHotelService
 {
     public async Task<PagedResult<HotelDto>> SearchAsync(HotelQueryDto query, CancellationToken ct = default)
     {
@@ -21,6 +22,8 @@ public sealed class HotelService(IHotelRepository repository, TimeProvider clock
             query.PageSize);
 
         var (items, total) = await repository.SearchAsync(criteria, ct);
+        logger.LogDebug("Hotel search {@Criteria} returned {Count} of {Total}", criteria, items.Count, total);
+
         return new PagedResult<HotelDto>(items.Select(h => h.ToDto()).ToList(), total, query.Page, query.PageSize);
     }
 
@@ -34,6 +37,7 @@ public sealed class HotelService(IHotelRepository repository, TimeProvider clock
         await EnsureUniqueNameAsync(hotel, ct);
 
         await repository.AddAsync(hotel, ct);
+        logger.LogInformation("Hotel {HotelId} '{HotelName}' created", hotel.Id, hotel.Name);
         return hotel.ToDto();
     }
 
@@ -45,6 +49,7 @@ public sealed class HotelService(IHotelRepository repository, TimeProvider clock
         await EnsureUniqueNameAsync(hotel, ct);
 
         await repository.UpdateAsync(hotel, ct);
+        logger.LogInformation("Hotel {HotelId} '{HotelName}' updated", hotel.Id, hotel.Name);
         return hotel.ToDto();
     }
 
@@ -52,11 +57,19 @@ public sealed class HotelService(IHotelRepository repository, TimeProvider clock
     {
         var hotel = await FindAsync(id, ct);
         await repository.DeleteAsync(hotel, ct);
+        logger.LogInformation("Hotel {HotelId} '{HotelName}' deleted", hotel.Id, hotel.Name);
     }
 
     private async Task<Hotel> FindAsync(int id, CancellationToken ct)
-        => await repository.GetByIdAsync(id, ct)
-           ?? throw new NotFoundException($"No existe un hotel con id {id}.");
+    {
+        var hotel = await repository.GetByIdAsync(id, ct);
+        if (hotel is null)
+        {
+            logger.LogWarning("Hotel {HotelId} not found", id);
+            throw new NotFoundException($"No existe un hotel con id {id}.");
+        }
+        return hotel;
+    }
 
     private async Task EnsureUniqueNameAsync(Hotel hotel, CancellationToken ct)
     {

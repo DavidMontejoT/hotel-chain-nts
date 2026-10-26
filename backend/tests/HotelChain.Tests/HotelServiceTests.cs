@@ -4,6 +4,7 @@ using HotelChain.Application.Hotels.Dtos;
 using HotelChain.Infrastructure.Persistence;
 using HotelChain.Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace HotelChain.Tests;
 
@@ -14,7 +15,8 @@ public class HotelServiceTests
         var options = new DbContextOptionsBuilder<HotelChainDbContext>()
             .UseInMemoryDatabase(Guid.NewGuid().ToString())
             .Options;
-        return new HotelService(new HotelRepository(new HotelChainDbContext(options)), TimeProvider.System);
+        return new HotelService(
+            new HotelRepository(new HotelChainDbContext(options)), TimeProvider.System, NullLogger<HotelService>.Instance);
     }
 
     private static CreateHotelDto Request(string name, int rating) => new()
