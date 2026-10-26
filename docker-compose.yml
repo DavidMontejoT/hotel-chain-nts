@@ -1,0 +1,45 @@
+# Runs the whole stack: SQL Server + API (.NET 8) + frontend (Angular served by nginx).
+#   docker compose up --build   ->   http://localhost:8080
+# Override the demo secrets with a .env file (see .env.example) before using this anywhere real.
+services:
+  db:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    platform: linux/amd64
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: ${DB_PASSWORD:-HotelChain_Dev_2026!}
+    volumes:
+      - sqldata:/var/opt/mssql
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa -P \"$${MSSQL_SA_PASSWORD}\" -Q 'SELECT 1' || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 20s
+
+  api:
+    build: ./backend
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ConnectionStrings__HotelChain: Server=db;Database=HotelChain;User Id=sa;Password=${DB_PASSWORD:-HotelChain_Dev_2026!};TrustServerCertificate=True
+      Database__Provider: SqlServer
+      Database__ApplyMigrations: "true"
+      Database__Seed: ${SEED_SAMPLE_DATA:-true}
+      Jwt__Key: ${JWT_KEY:-compose-demo-signing-key-change-me-0123456789}
+      AdminUser__Username: ${ADMIN_USERNAME:-admin}
+      AdminUser__Password: ${ADMIN_PASSWORD:-Admin123!}
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "5080:8080"
+
+  web:
+    build: ./frontend
+    depends_on:
+      - api
+    ports:
+      - "8080:80"
+
+volumes:
+  sqldata:
