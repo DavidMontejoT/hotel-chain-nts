@@ -37,10 +37,14 @@
       <label class="field">
         <span>Calificación *</span>
         <select formControlName="rating">
+          <option [ngValue]="null" disabled>Selecciona una calificación</option>
           @for (r of ratings; track r) {
             <option [ngValue]="r">{{ r }} {{ r === 1 ? 'estrella' : 'estrellas' }}</option>
           }
         </select>
+        @if (invalid('rating')) {
+          <span class="error-text">Elige una calificación de 1 a 5 estrellas.</span>
+        }
       </label>
 
       <label class="field">
