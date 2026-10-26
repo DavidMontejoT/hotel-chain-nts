@@ -1,6 +1,7 @@
-import { Component, OnDestroy, OnInit, inject, output } from '@angular/core';
+import { Component, inject, output } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
-import { Subscription, debounceTime, distinctUntilChanged } from 'rxjs';
+import { debounceTime, distinctUntilChanged } from 'rxjs';
 
 import { HotelFilter } from '../../core/models/hotel.model';
 
@@ -42,7 +43,7 @@ export type RatingMode = 'exact' | 'min';
     @media (max-width: 560px) { .field, .grow, .btn { flex: 1 1 100%; } }
   `,
 })
-export class HotelSearchComponent implements OnInit, OnDestroy {
+export class HotelSearchComponent {
   readonly filterChange = output<HotelFilter>();
 
   protected readonly ratings = [5, 4, 3, 2, 1];
@@ -52,16 +53,15 @@ export class HotelSearchComponent implements OnInit, OnDestroy {
     mode: 'exact' as RatingMode,
   });
 
-  private sub?: Subscription;
-
-  ngOnInit(): void {
-    this.sub = this.form.valueChanges
-      .pipe(debounceTime(300), distinctUntilChanged((a, b) => JSON.stringify(a) === JSON.stringify(b)))
+  constructor() {
+    // Live search: debounce typing and skip identical filters; unsubscribes automatically on destroy.
+    this.form.valueChanges
+      .pipe(
+        debounceTime(300),
+        distinctUntilChanged((a, b) => JSON.stringify(a) === JSON.stringify(b)),
+        takeUntilDestroyed(),
+      )
       .subscribe(() => this.emit());
-  }
-
-  ngOnDestroy(): void {
-    this.sub?.unsubscribe();
   }
 
   protected emit(): void {

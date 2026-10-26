@@ -17,26 +17,28 @@
 </section>
 
 <section id="hoteles" class="container page">
+  @let view = view$ | async;
+
   <div class="page-header">
     <h2>Nuestros hoteles</h2>
-    @if (!loading() && !error()) {
-      <span class="muted">{{ total() }} {{ total() === 1 ? 'hotel encontrado' : 'hoteles encontrados' }}</span>
+    @if (view && !view.loading && !view.error) {
+      <span class="muted">{{ view.total }} {{ view.total === 1 ? 'hotel encontrado' : 'hoteles encontrados' }}</span>
     }
   </div>
 
   <div class="card filters">
-    <app-hotel-search (filterChange)="load($event)" />
+    <app-hotel-search (filterChange)="search($event)" />
   </div>
 
-  @if (error()) {
-    <div class="alert alert-error" role="alert">{{ error() }}</div>
-  } @else if (loading()) {
+  @if (!view || view.loading) {
     <p class="empty">Cargando hoteles…</p>
-  } @else if (hotels().length === 0) {
+  } @else if (view.error) {
+    <div class="alert alert-error" role="alert">{{ view.error }}</div>
+  } @else if (view.items.length === 0) {
     <p class="empty">No encontramos hoteles con esos criterios.</p>
   } @else {
     <ul class="grid">
-      @for (hotel of hotels(); track hotel.id) {
+      @for (hotel of view.items; track hotel.id) {
         <li class="card hotel">
           <div class="photo">
             @if (hotel.imageUrl && !brokenImages().has(hotel.id)) {
