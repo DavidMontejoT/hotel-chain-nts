@@ -3,8 +3,9 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 
 import { HotelRequest } from '../../../core/models/hotel.model';
-import { errorMessage } from '../../../core/services/error-message';
+import { errorMessage, isHandledGlobally } from '../../../core/services/error-message';
 import { HotelService } from '../../../core/services/hotel.service';
+import { ToastService } from '../../../core/services/toast.service';
 
 const URL_PATTERN = /^https?:\/\/.+/i;
 
@@ -18,6 +19,7 @@ const URL_PATTERN = /^https?:\/\/.+/i;
 export class HotelFormComponent implements OnInit {
   private readonly hotelService = inject(HotelService);
   private readonly router = inject(Router);
+  private readonly toast = inject(ToastService);
 
   /** Id del hotel en edición (parámetro de ruta); vacío al crear. */
   readonly id = input<string>();
@@ -54,7 +56,9 @@ export class HotelFormComponent implements OnInit {
         this.loading.set(false);
       },
       error: (err) => {
-        this.error.set(errorMessage(err));
+        // A missing hotel was already reported by the interceptor; go back to the list.
+        if (isHandledGlobally(err)) this.router.navigate(['/admin/hotels']);
+        else this.error.set(errorMessage(err));
         this.loading.set(false);
       },
     });
@@ -85,9 +89,12 @@ export class HotelFormComponent implements OnInit {
       : this.hotelService.create(request);
 
     save$.subscribe({
-      next: () => this.router.navigate(['/admin/hotels']),
+      next: (hotel) => {
+        this.toast.success(this.isEdit ? `Se actualizó "${hotel.name}".` : `Se creó "${hotel.name}".`);
+        this.router.navigate(['/admin/hotels']);
+      },
       error: (err) => {
-        this.error.set(errorMessage(err));
+        if (!isHandledGlobally(err)) this.error.set(errorMessage(err));
         this.saving.set(false);
       },
     });

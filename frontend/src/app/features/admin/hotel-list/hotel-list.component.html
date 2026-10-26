@@ -11,9 +11,6 @@
     <app-hotel-search (filterChange)="onFilter($event)" />
   </div>
 
-  @if (notice()) {
-    <div class="alert alert-success" role="status">{{ notice() }}</div>
-  }
   @if (error()) {
     <div class="alert alert-error" role="alert">{{ error() }}</div>
   }
@@ -44,16 +41,8 @@
                 {{ hotel.pricePerNight | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}
               </td>
               <td class="actions">
-                @if (confirmingId() === hotel.id) {
-                  <span class="confirm">¿Eliminar?</span>
-                  <button class="btn btn-danger btn-sm" type="button" (click)="remove(hotel)">Sí, eliminar</button>
-                  <button class="btn btn-ghost btn-sm" type="button" (click)="confirmingId.set(null)">Cancelar</button>
-                } @else {
-                  <a class="btn btn-ghost btn-sm" [routerLink]="['/admin/hotels', hotel.id, 'edit']">Editar</a>
-                  <button class="btn btn-danger btn-sm" type="button" (click)="confirmingId.set(hotel.id); notice.set(null)">
-                    Eliminar
-                  </button>
-                }
+                <a class="btn btn-ghost btn-sm" [routerLink]="['/admin/hotels', hotel.id, 'edit']">Editar</a>
+                <button class="btn btn-danger btn-sm" type="button" (click)="remove(hotel)">Eliminar</button>
               </td>
             </tr>
           }

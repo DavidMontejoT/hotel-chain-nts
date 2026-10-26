@@ -2,7 +2,7 @@ import { CurrencyPipe } from '@angular/common';
 import { Component, inject, signal } from '@angular/core';
 
 import { Hotel, HotelFilter } from '../../../core/models/hotel.model';
-import { errorMessage } from '../../../core/services/error-message';
+import { errorMessage, isHandledGlobally } from '../../../core/services/error-message';
 import { HotelService } from '../../../core/services/hotel.service';
 import { HotelSearchComponent } from '../../../shared/components/hotel-search.component';
 import { StarRatingComponent } from '../../../shared/components/star-rating.component';
@@ -41,7 +41,7 @@ export class LandingComponent {
         this.loading.set(false);
       },
       error: (err) => {
-        this.error.set(errorMessage(err));
+        this.error.set(isHandledGlobally(err) ? 'No pudimos cargar los hoteles en este momento.' : errorMessage(err));
         this.loading.set(false);
       },
     });

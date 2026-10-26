@@ -3,8 +3,10 @@ import { Component, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
 import { Hotel, HotelFilter } from '../../../core/models/hotel.model';
-import { errorMessage } from '../../../core/services/error-message';
+import { ConfirmService } from '../../../core/services/confirm.service';
+import { errorMessage, isHandledGlobally } from '../../../core/services/error-message';
 import { HotelService } from '../../../core/services/hotel.service';
+import { ToastService } from '../../../core/services/toast.service';
 import { HotelSearchComponent } from '../../../shared/components/hotel-search.component';
 import { StarRatingComponent } from '../../../shared/components/star-rating.component';
 
@@ -18,6 +20,8 @@ const PAGE_SIZE = 10;
 })
 export class HotelListComponent {
   private readonly hotelService = inject(HotelService);
+  private readonly confirm = inject(ConfirmService);
+  private readonly toast = inject(ToastService);
 
   protected readonly hotels = signal<Hotel[]>([]);
   protected readonly total = signal(0);
@@ -25,9 +29,6 @@ export class HotelListComponent {
   protected readonly totalPages = signal(1);
   protected readonly loading = signal(true);
   protected readonly error = signal<string | null>(null);
-  protected readonly notice = signal<string | null>(null);
-  /** Id del hotel cuya eliminación se está confirmando. */
-  protected readonly confirmingId = signal<number | null>(null);
 
   private filter: HotelFilter = {};
 
@@ -46,17 +47,24 @@ export class HotelListComponent {
     this.load();
   }
 
-  protected remove(hotel: Hotel): void {
+  protected async remove(hotel: Hotel): Promise<void> {
+    const confirmed = await this.confirm.ask({
+      title: 'Eliminar hotel',
+      message: `¿Seguro que quieres eliminar "${hotel.name}"? Esta acción no se puede deshacer.`,
+      confirmText: 'Sí, eliminar',
+      danger: true,
+    });
+    if (!confirmed) return;
+
     this.hotelService.delete(hotel.id).subscribe({
       next: () => {
-        this.confirmingId.set(null);
-        this.notice.set(`Se eliminó "${hotel.name}".`);
+        this.toast.success(`Se eliminó "${hotel.name}".`);
         if (this.hotels().length === 1 && this.page() > 1) this.page.update((p) => p - 1);
         this.load();
       },
       error: (err) => {
-        this.confirmingId.set(null);
-        this.error.set(errorMessage(err));
+        if (!isHandledGlobally(err)) this.error.set(errorMessage(err));
+        this.load();
       },
     });
   }
@@ -72,7 +80,7 @@ export class HotelListComponent {
         this.loading.set(false);
       },
       error: (err) => {
-        this.error.set(errorMessage(err));
+        this.error.set(isHandledGlobally(err) ? 'No se pudo cargar el listado.' : errorMessage(err));
         this.loading.set(false);
       },
     });
