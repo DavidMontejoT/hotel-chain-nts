@@ -121,7 +121,7 @@ Un hotel puede tener una URL de imagen externa (`https://...`) o una foto subida
 
 - Si la foto ya pesa 400 KB o menos, se guarda **tal cual**, sin recomprimirla, así que no pierde nada.
 - Si pesa más, se codifica en **WebP con calidad fija 85**, un nivel donde la compresión no se nota en una foto. Lo que se ajusta es la **resolución**, no la calidad.
-- Para encontrar la resolución máxima que cabe en 400 KB, se codifica una muestra pequeña y se mide cuántos bytes ocupa cada píxel de esa foto en particular. Con eso se estima la escala, y una búsqueda binaria la afina. El resultado queda a pocos píxeles del máximo posible (los tests verifican que una versión 10 % más grande ya no cabe).
+- Para encontrar la resolución máxima que cabe en 400 KB, se codifica una muestra pequeña y se mide cuánto pesa esa foto en particular. Con eso se estima la escala, y cada intento siguiente se interpola con las mediciones anteriores, así que normalmente bastan 2 o 3 codificaciones. Termina cuando la foto usa casi todo el presupuesto (97 % o más) o cuando cabe en su tamaño original. Los tests verifican que una versión 10 % más grande ya no cabe y que una imagen que cabe completa conserva su resolución original.
 - Se respeta la orientación EXIF de las fotos de celular y se quitan los metadatos (GPS, cámara).
 
 Con "Usar URL" la imagen está alojada en otro servidor, así que la API no puede controlar su peso. Para cumplir el límite de 400 KB, lo recomendado es subir el archivo.

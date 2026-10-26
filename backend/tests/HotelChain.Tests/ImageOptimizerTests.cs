@@ -38,6 +38,19 @@ public class ImageOptimizerTests
     }
 
     [Fact]
+    public async Task Heavy_files_that_fit_at_full_size_keep_their_original_resolution()
+    {
+        // Heavy as PNG, but its soft detail fits in WebP at the original size, which a small probe underestimates.
+        var original = TestImages.SmoothPng(4000);
+        Assert.True(original.Length > MaxBytes);
+
+        var result = await _optimizer.OptimizeAsync(original, ".png", MaxBytes);
+
+        Assert.True(result.Content.Length <= MaxBytes, $"{result.Content.Length} bytes");
+        Assert.Equal((4000, 4000), (result.Width, result.Height));
+    }
+
+    [Fact]
     public async Task Images_within_the_budget_are_kept_untouched()
     {
         var small = TestImages.LargePng(200, 120);

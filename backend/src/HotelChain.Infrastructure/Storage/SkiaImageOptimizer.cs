@@ -13,7 +13,9 @@ public sealed class SkiaImageOptimizer : IImageOptimizer
     /// <summary>High quality where compression artifacts are not visible in a photo.</summary>
     public const int Quality = 85;
 
-    private const int SearchSteps = 4;
+    private const int MaxAttempts = 8;
+    private const double Tolerance = 0.02;
+    private const double NearlyFull = 0.97;
     private const double ProbePixels = 500_000;
     private static readonly SKSamplingOptions Sampling = new(SKCubicResampler.Mitchell);
 
@@ -28,50 +30,66 @@ public sealed class SkiaImageOptimizer : IImageOptimizer
         if (image.LongLength <= maxBytes)
             return new OptimizedImage(image, extension, source.Width, source.Height);
 
-        // File size grows roughly with the pixel count. A quick probe measures the bytes per pixel
-        // of this particular photo, which gives a good estimate of the scale that fits the budget.
+        // File size grows roughly with the pixel count, so each encoding tells how far the target is.
+        // A small probe gives the first guess; each attempt then interpolates (in log-log scale) between
+        // the two latest measurements, which usually lands within a couple of percent in 2-3 attempts.
         var pixels = (double)source.Width * source.Height;
-        double estimate;
+        var target = maxBytes * 0.99;
+        (double Scale, long Bytes) previous;
         using (var probe = Resize(source, Math.Min(1.0, Math.Sqrt(ProbePixels / pixels))))
-        {
-            var probeBytes = Encode(probe).Content.Length;
-            estimate = Math.Sqrt(maxBytes / ((double)probeBytes / (probe.Width * probe.Height)) / pixels);
-        }
+            previous = ((double)probe.Width / source.Width, Encode(probe).Content.Length);
 
-        var low = 0.0;
-        var high = Math.Min(1.0, estimate * 1.15);
-        var best = Encode(source, high);
-        if (best.Content.Length <= maxBytes)
-        {
-            if (high >= 1.0) return best;
-            // The estimate was too cautious: look for a larger size, up to the original one.
-            (low, high) = (high, 1.0);
-        }
-        else
-        {
-            low = Math.Min(1.0, estimate) * 0.85;
-            best = Encode(source, low);
-            while (best.Content.Length > maxBytes)
-            {
-                ct.ThrowIfCancellationRequested();
-                (high, low) = (low, low * 0.8);
-                best = Encode(source, low);
-            }
-        }
+        OptimizedImage? best = null;
+        double low = 0, high = double.PositiveInfinity;
+        var scale = Math.Min(1.0, previous.Scale * Math.Sqrt(target / previous.Bytes));
 
-        // Binary search for the largest scale that still fits.
-        for (var i = 0; i < SearchSteps; i++)
+        for (var attempt = 0; attempt < MaxAttempts; attempt++)
         {
             ct.ThrowIfCancellationRequested();
-            var mid = (low + high) / 2;
-            var candidate = Encode(source, mid);
+            var candidate = Encode(source, scale);
             if (candidate.Content.Length <= maxBytes)
-                (best, low) = (candidate, mid);
+            {
+                (best, low) = (candidate, scale);
+                // Done when it is the original size or it already uses almost the whole budget.
+                if (scale >= 1.0 || candidate.Content.Length >= maxBytes * NearlyFull) break;
+            }
             else
-                high = mid;
+            {
+                high = scale;
+            }
+            if (!double.IsPositiveInfinity(high) && high - low <= high * Tolerance) break;
+
+            var current = (Scale: scale, Bytes: (long)candidate.Content.Length);
+            scale = NextScale(previous, current, target, low, high);
+            previous = current;
+        }
+
+        // Safety net: keep shrinking until it fits (only reached with very unusual images).
+        while (best is null)
+        {
+            ct.ThrowIfCancellationRequested();
+            low = (high == double.PositiveInfinity ? 1.0 : high) * 0.8;
+            var candidate = Encode(source, low);
+            if (candidate.Content.Length <= maxBytes) best = candidate;
+            else high = low;
         }
 
         return best;
+    }
+
+    /// <summary>Predicts the scale that reaches <paramref name="target"/> bytes, kept between the known bounds.</summary>
+    private static double NextScale((double Scale, long Bytes) a, (double Scale, long Bytes) b, double target, double low, double high)
+    {
+        var exponent = Math.Abs(b.Scale - a.Scale) > 1e-6
+            ? Math.Log((double)b.Bytes / a.Bytes) / Math.Log(b.Scale / a.Scale)
+            : 2.0;
+        if (!double.IsFinite(exponent) || exponent < 0.5 || exponent > 4) exponent = 2.0;
+
+        var next = Math.Min(1.0, b.Scale * Math.Pow(target / b.Bytes, 1 / exponent));
+        // Never repeat a known result: stay strictly inside the bracket of what fits and what does not.
+        if (next >= high) next = low > 0 ? (low + high) / 2 : high * 0.9;
+        if (next <= low) next = double.IsPositiveInfinity(high) ? Math.Min(1.0, low * 1.05) : (low + high) / 2;
+        return next;
     }
 
     /// <summary>Decodes the image applying its EXIF orientation, so phone photos are not stored rotated.</summary>
