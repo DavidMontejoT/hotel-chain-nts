@@ -1,8 +1,9 @@
+import { DecimalPipe } from '@angular/common';
 import { Component, forwardRef, inject, signal } from '@angular/core';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
 
 import { errorMessage, isHandledGlobally } from '../../core/services/error-message';
-import { ACCEPTED_IMAGE_TYPES, ImageService, MAX_IMAGE_BYTES } from '../../core/services/image.service';
+import { ACCEPTED_IMAGE_TYPES, ImageService, MAX_IMAGE_BYTES, UploadedImage } from '../../core/services/image.service';
 import { ImageSrcPipe } from '../pipes/image-src.pipe';
 
 type Mode = 'upload' | 'url';
@@ -10,7 +11,7 @@ type Mode = 'upload' | 'url';
 /** Form control that lets the admin either upload a photo or paste an image URL. */
 @Component({
   selector: 'app-image-picker',
-  imports: [ImageSrcPipe],
+  imports: [DecimalPipe, ImageSrcPipe],
   providers: [{ provide: NG_VALUE_ACCESSOR, useExisting: forwardRef(() => ImagePickerComponent), multi: true }],
   template: `
     <div class="tabs" role="tablist">
@@ -25,8 +26,8 @@ type Mode = 'upload' | 'url';
     @if (mode() === 'upload') {
       <label class="drop" [class.busy]="uploading()">
         <input type="file" [accept]="accept" (change)="onFile($event)" [disabled]="disabled() || uploading()" />
-        <strong>{{ uploading() ? 'Subiendo…' : 'Haz clic para elegir una imagen' }}</strong>
-        <span>JPG, PNG, WEBP o GIF · máx. 5 MB</span>
+        <strong>{{ uploading() ? 'Subiendo y optimizando…' : 'Haz clic para elegir una imagen' }}</strong>
+        <span>JPG, PNG, WEBP o GIF · hasta 10 MB · se optimiza a 400 KB o menos</span>
       </label>
     } @else {
       <input type="url" placeholder="https://…" [value]="isExternal() ? value() : ''" [disabled]="disabled()"
@@ -40,6 +41,9 @@ type Mode = 'upload' | 'url';
     @if (value(); as current) {
       <div class="preview">
         <img [src]="current | imageSrc" alt="Vista previa de la imagen" (error)="error.set('No se pudo cargar la vista previa de esta imagen.')" />
+        @if (optimized(); as info) {
+          <span class="info">Optimizada: {{ info.width }} × {{ info.height }} px · {{ info.sizeBytes / 1024 | number: '1.0-0' }} KB</span>
+        }
         <button type="button" class="btn btn-ghost btn-sm" (click)="setValue('')" [disabled]="disabled()">Quitar imagen</button>
       </div>
     }
@@ -57,6 +61,7 @@ type Mode = 'upload' | 'url';
     /* The native input stays focusable for keyboard users but is visually hidden. */
     .drop input { position: absolute; width: 1px; height: 1px; opacity: 0; overflow: hidden; }
     .preview { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+    .info { font-size: .85rem; color: var(--c-muted); }
     .preview img { width: 160px; aspect-ratio: 16 / 10; object-fit: cover; border-radius: 8px; background: var(--c-border); }
   `,
 })
@@ -69,6 +74,8 @@ export class ImagePickerComponent implements ControlValueAccessor {
   protected readonly uploading = signal(false);
   protected readonly disabled = signal(false);
   protected readonly error = signal<string | null>(null);
+  /** Final dimensions and weight of the last uploaded photo. */
+  protected readonly optimized = signal<UploadedImage | null>(null);
 
   private onChange: (value: string) => void = () => undefined;
   protected onTouched: () => void = () => undefined;
@@ -97,6 +104,7 @@ export class ImagePickerComponent implements ControlValueAccessor {
 
   protected setValue(value: string): void {
     this.error.set(null);
+    this.optimized.set(null);
     this.value.set(value);
     this.onChange(value);
   }
@@ -117,15 +125,16 @@ export class ImagePickerComponent implements ControlValueAccessor {
       return;
     }
     if (file.size > MAX_IMAGE_BYTES) {
-      this.error.set('La imagen no puede superar 5 MB.');
+      this.error.set('La imagen no puede superar 10 MB.');
       return;
     }
 
     this.uploading.set(true);
     this.error.set(null);
     this.images.upload(file).subscribe({
-      next: ({ url }) => {
-        this.setValue(url);
+      next: (image) => {
+        this.setValue(image.url);
+        this.optimized.set(image);
         this.uploading.set(false);
       },
       error: (err) => {
