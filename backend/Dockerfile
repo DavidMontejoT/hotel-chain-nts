@@ -21,6 +21,8 @@ RUN dotnet publish src/HotelChain.Api/HotelChain.Api.csproj -c Release -o /app -
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
 WORKDIR /app
 COPY --from=build /app ./
+# Writable folder for uploaded hotel images (mounted as a volume in docker-compose).
+RUN mkdir -p /app/uploads && chown app /app/uploads
 ENV ASPNETCORE_ENVIRONMENT=Production \
     ASPNETCORE_HTTP_PORTS=8080
 EXPOSE 8080

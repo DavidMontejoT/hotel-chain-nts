@@ -28,6 +28,8 @@ services:
       Jwt__Key: ${JWT_KEY:-compose-demo-signing-key-change-me-0123456789}
       AdminUser__Username: ${ADMIN_USERNAME:-admin}
       AdminUser__Password: ${ADMIN_PASSWORD:-Admin123!}
+    volumes:
+      - uploads:/app/uploads
     depends_on:
       db:
         condition: service_healthy
@@ -43,3 +45,4 @@ services:
 
 volumes:
   sqldata:
+  uploads:
