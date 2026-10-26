@@ -14,11 +14,17 @@ export type RatingMode = 'exact' | 'min';
   template: `
     <form class="search" [formGroup]="form" (ngSubmit)="emit()" role="search">
       <label class="field grow">
-        <span>Nombre del hotel</span>
-        <input type="search" formControlName="name" placeholder="Ej. Cartagena" autocomplete="off" />
+        <span class="label">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-7-6.1-7-11.5a7 7 0 0 1 14 0C19 14.9 12 21 12 21Z" /><circle cx="12" cy="9.5" r="2.5" /></svg>
+          Nombre del hotel
+        </span>
+        <input type="search" formControlName="name" placeholder="¿A dónde quieres ir?" autocomplete="off" />
       </label>
       <label class="field">
-        <span>Calificación</span>
+        <span class="label">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9Z" /></svg>
+          Calificación
+        </span>
         <select formControlName="rating">
           <option [ngValue]="null">Todas</option>
           @for (r of ratings; track r) {
@@ -27,20 +33,37 @@ export type RatingMode = 'exact' | 'min';
         </select>
       </label>
       <label class="field">
-        <span>Criterio</span>
+        <span class="label">Criterio</span>
         <select formControlName="mode">
           <option value="exact">Exacta</option>
           <option value="min">Mínima</option>
         </select>
       </label>
-      <button type="button" class="btn btn-ghost" (click)="clear()">Limpiar</button>
+      <div class="actions">
+        <button type="button" class="btn btn-ghost" (click)="clear()">Limpiar</button>
+        <button type="submit" class="btn search-btn">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" /></svg>
+          Buscar hoteles
+        </button>
+      </div>
     </form>
   `,
   styles: `
-    .search { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end; }
-    .grow { flex: 1 1 220px; }
-    .field { flex: 0 1 160px; }
-    @media (max-width: 560px) { .field, .grow, .btn { flex: 1 1 100%; } }
+    .search { display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-end; }
+    .grow { flex: 1 1 240px; }
+    .field { flex: 0 1 170px; }
+    .label {
+      display: inline-flex; align-items: center; gap: 6px;
+      text-transform: uppercase; letter-spacing: .12em; font-size: .72rem; font-weight: 600; color: var(--c-muted);
+    }
+    .label svg { width: 14px; height: 14px; fill: none; stroke: var(--c-accent); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    input, select { border-color: transparent; border-bottom: 1px solid var(--c-border-strong); border-radius: 10px; background: rgb(255 255 255 / .7); font-size: 1rem; }
+    .actions { display: flex; gap: 10px; margin-left: auto; }
+    .search-btn svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; }
+    @media (max-width: 560px) {
+      .field, .grow, .actions { flex: 1 1 100%; }
+      .actions .btn { flex: 1; }
+    }
   `,
 })
 export class HotelSearchComponent {
