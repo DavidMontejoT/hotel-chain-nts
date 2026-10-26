@@ -4,6 +4,7 @@ using System.Net.Http.Json;
 using HotelChain.Application.Auth;
 using HotelChain.Application.Common;
 using HotelChain.Application.Hotels.Dtos;
+using HotelChain.Application.Images;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 
@@ -22,7 +23,27 @@ public class HotelsApiTests : IClassFixture<HotelsApiTests.ApiFactory>
             builder.UseSetting("Jwt:Key", "test-signing-key-0123456789abcdef0123456789");
             builder.UseSetting("AdminUser:Username", "admin");
             builder.UseSetting("AdminUser:Password", "secret");
+            builder.UseSetting("ImageStorage:RootPath", ImagesPath);
         }
+
+        public string ImagesPath { get; } = Path.Combine(Path.GetTempPath(), "hotelchain-tests-" + Guid.NewGuid());
+
+        protected override void Dispose(bool disposing)
+        {
+            base.Dispose(disposing);
+            if (Directory.Exists(ImagesPath)) Directory.Delete(ImagesPath, recursive: true);
+        }
+    }
+
+    // Smallest valid PNG (1x1 transparent pixel).
+    private static readonly byte[] Png = Convert.FromBase64String(
+        "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=");
+
+    private static MultipartFormDataContent FileForm(byte[] content, string fileName, string contentType)
+    {
+        var file = new ByteArrayContent(content);
+        file.Headers.ContentType = new MediaTypeHeaderValue(contentType);
+        return new MultipartFormDataContent { { file, "file", fileName } };
     }
 
     private readonly ApiFactory _factory;
@@ -101,6 +122,58 @@ public class HotelsApiTests : IClassFixture<HotelsApiTests.ApiFactory>
     {
         var client = await AdminClientAsync();
         var response = await client.PostAsJsonAsync("/api/hotels", new { name = "", rating = 0 });
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Admin_can_upload_an_image_and_use_it_in_a_hotel()
+    {
+        var client = await AdminClientAsync();
+
+        var upload = await client.PostAsync("/api/images", FileForm(Png, "foto.png", "image/png"));
+        Assert.Equal(HttpStatusCode.Created, upload.StatusCode);
+        var url = (await upload.Content.ReadFromJsonAsync<ImageUploadResult>())!.Url;
+        Assert.StartsWith("/uploads/", url);
+        Assert.EndsWith(".png", url);
+
+        var image = await client.GetAsync(url);
+        Assert.Equal(HttpStatusCode.OK, image.StatusCode);
+        Assert.Equal("image/png", image.Content.Headers.ContentType?.MediaType);
+
+        var create = await client.PostAsJsonAsync("/api/hotels", new CreateHotelDto
+        {
+            Name = "Hotel Con Foto", City = "Cali", Address = "Calle 5", Rating = 4, PricePerNight = 100, ImageUrl = url
+        });
+        Assert.Equal(HttpStatusCode.Created, create.StatusCode);
+        var hotel = (await create.Content.ReadFromJsonAsync<HotelDto>())!;
+
+        await client.DeleteAsync($"/api/hotels/{hotel.Id}");
+        Assert.False(File.Exists(Path.Combine(_factory.ImagesPath, Path.GetFileName(url))));
+    }
+
+    [Fact]
+    public async Task Non_image_files_are_rejected_even_with_an_image_content_type()
+    {
+        var client = await AdminClientAsync();
+        var response = await client.PostAsync("/api/images", FileForm("hola"u8.ToArray(), "foto.png", "image/png"));
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Uploading_images_requires_admin_token()
+    {
+        var response = await _factory.CreateClient().PostAsync("/api/images", FileForm(Png, "foto.png", "image/png"));
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Hotel_image_must_be_http_url_or_uploaded_path()
+    {
+        var client = await AdminClientAsync();
+        var response = await client.PostAsJsonAsync("/api/hotels", new CreateHotelDto
+        {
+            Name = "Hotel Ruta Rara", City = "Cali", Address = "Calle 5", Rating = 4, PricePerNight = 100, ImageUrl = "/uploads/../appsettings.json"
+        });
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
 }

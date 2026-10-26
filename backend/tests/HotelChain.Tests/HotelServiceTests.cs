@@ -1,6 +1,7 @@
 using HotelChain.Application.Common;
 using HotelChain.Application.Hotels;
 using HotelChain.Application.Hotels.Dtos;
+using HotelChain.Application.Images;
 using HotelChain.Infrastructure.Persistence;
 using HotelChain.Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
@@ -10,13 +11,15 @@ namespace HotelChain.Tests;
 
 public class HotelServiceTests
 {
-    private static HotelService CreateService()
+    private readonly FakeImageStorage _images = new();
+
+    private HotelService CreateService()
     {
         var options = new DbContextOptionsBuilder<HotelChainDbContext>()
             .UseInMemoryDatabase(Guid.NewGuid().ToString())
             .Options;
         return new HotelService(
-            new HotelRepository(new HotelChainDbContext(options)), TimeProvider.System, NullLogger<HotelService>.Instance);
+            new HotelRepository(new HotelChainDbContext(options)), _images, TimeProvider.System, NullLogger<HotelService>.Instance);
     }
 
     private static CreateHotelDto Request(string name, int rating) => new()
@@ -136,5 +139,50 @@ public class HotelServiceTests
         var updated = await service.UpdateAsync(created.Id, UpdateRequest("Hotel Andino", 5));
 
         Assert.Equal(5, updated.Rating);
+    }
+
+    [Fact]
+    public async Task Replacing_or_deleting_an_uploaded_image_removes_the_old_file()
+    {
+        var service = CreateService();
+        var dto = Request("Hotel Andino", 4);
+        dto.ImageUrl = "/uploads/first.jpg";
+        var created = await service.CreateAsync(dto);
+
+        var update = UpdateRequest("Hotel Andino", 4);
+        update.ImageUrl = "/uploads/second.jpg";
+        await service.UpdateAsync(created.Id, update);
+        await service.DeleteAsync(created.Id);
+
+        Assert.Equal(["/uploads/first.jpg", "/uploads/second.jpg"], _images.Deleted);
+    }
+
+    [Fact]
+    public async Task External_image_urls_are_never_deleted()
+    {
+        var service = CreateService();
+        var dto = Request("Hotel Andino", 4);
+        dto.ImageUrl = "https://example.com/photo.jpg";
+        var created = await service.CreateAsync(dto);
+
+        await service.DeleteAsync(created.Id);
+
+        Assert.Empty(_images.Deleted);
+    }
+
+    private sealed class FakeImageStorage : IImageStorage
+    {
+        public List<string> Deleted { get; } = [];
+
+        public Task<string> SaveAsync(Stream content, string extension, CancellationToken ct = default)
+            => Task.FromResult(ImagePaths.PublicPrefix + "fake" + extension);
+
+        public bool IsManaged(string? url) => url?.StartsWith(ImagePaths.PublicPrefix) == true;
+
+        public Task DeleteAsync(string url, CancellationToken ct = default)
+        {
+            Deleted.Add(url);
+            return Task.CompletedTask;
+        }
     }
 }

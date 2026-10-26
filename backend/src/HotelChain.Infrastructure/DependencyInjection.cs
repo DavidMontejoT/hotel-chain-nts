@@ -1,8 +1,10 @@
 using HotelChain.Application.Auth;
+using HotelChain.Application.Images;
 using HotelChain.Domain.Repositories;
 using HotelChain.Infrastructure.Auth;
 using HotelChain.Infrastructure.Persistence;
 using HotelChain.Infrastructure.Repositories;
+using HotelChain.Infrastructure.Storage;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -49,6 +51,10 @@ public static class DependencyInjection
         services.Configure<JwtOptions>(configuration.GetSection(JwtOptions.SectionName));
         services.Configure<AdminUserOptions>(configuration.GetSection(AdminUserOptions.SectionName));
         services.AddScoped<IAuthService, JwtAuthService>();
+
+        services.Configure<ImageStorageOptions>(configuration.GetSection(ImageStorageOptions.SectionName));
+        services.AddSingleton<LocalImageStorage>();
+        services.AddSingleton<IImageStorage>(sp => sp.GetRequiredService<LocalImageStorage>());
 
         return services;
     }

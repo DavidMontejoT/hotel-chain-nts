@@ -1,4 +1,5 @@
 using HotelChain.Application.Hotels;
+using HotelChain.Application.Images;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace HotelChain.Application;
@@ -9,6 +10,7 @@ public static class DependencyInjection
     {
         services.AddSingleton(TimeProvider.System);
         services.AddScoped<IHotelService, HotelService>();
+        services.AddScoped<IImageService, ImageService>();
         return services;
     }
 }

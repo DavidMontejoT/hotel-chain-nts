@@ -1,5 +1,6 @@
 using HotelChain.Application.Common;
 using HotelChain.Application.Hotels.Dtos;
+using HotelChain.Application.Images;
 using HotelChain.Domain.Common;
 using HotelChain.Domain.Entities;
 using HotelChain.Domain.Repositories;
@@ -7,7 +8,11 @@ using Microsoft.Extensions.Logging;
 
 namespace HotelChain.Application.Hotels;
 
-public sealed class HotelService(IHotelRepository repository, TimeProvider clock, ILogger<HotelService> logger) : IHotelService
+public sealed class HotelService(
+    IHotelRepository repository,
+    IImageStorage images,
+    TimeProvider clock,
+    ILogger<HotelService> logger) : IHotelService
 {
     public async Task<PagedResult<HotelDto>> SearchAsync(HotelQueryDto query, CancellationToken ct = default)
     {
@@ -44,12 +49,16 @@ public sealed class HotelService(IHotelRepository repository, TimeProvider clock
     public async Task<HotelDto> UpdateAsync(int id, UpdateHotelDto dto, CancellationToken ct = default)
     {
         var hotel = await FindAsync(id, ct);
+        var previousImage = hotel.ImageUrl;
         hotel.Apply(dto);
         hotel.UpdatedAt = clock.GetUtcNow().UtcDateTime;
         await EnsureUniqueNameAsync(hotel, ct);
 
         await repository.UpdateAsync(hotel, ct);
         logger.LogInformation("Hotel {HotelId} '{HotelName}' updated", hotel.Id, hotel.Name);
+
+        if (previousImage != hotel.ImageUrl)
+            await DeleteImageAsync(previousImage, ct);
         return hotel.ToDto();
     }
 
@@ -58,6 +67,21 @@ public sealed class HotelService(IHotelRepository repository, TimeProvider clock
         var hotel = await FindAsync(id, ct);
         await repository.DeleteAsync(hotel, ct);
         logger.LogInformation("Hotel {HotelId} '{HotelName}' deleted", hotel.Id, hotel.Name);
+        await DeleteImageAsync(hotel.ImageUrl, ct);
+    }
+
+    /// <summary>Removes an uploaded image that is no longer referenced. Failures are logged, never thrown.</summary>
+    private async Task DeleteImageAsync(string? url, CancellationToken ct)
+    {
+        if (!images.IsManaged(url)) return;
+        try
+        {
+            await images.DeleteAsync(url!, ct);
+        }
+        catch (Exception ex)
+        {
+            logger.LogWarning(ex, "Could not delete image {ImageUrl}", url);
+        }
     }
 
     private async Task<Hotel> FindAsync(int id, CancellationToken ct)

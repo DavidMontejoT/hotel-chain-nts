@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using HotelChain.Application.Common.Validation;
 
 namespace HotelChain.Application.Hotels.Dtos;
 
@@ -23,6 +24,7 @@ public abstract class HotelWriteDto
     [Range(0, 100_000_000)]
     public decimal PricePerNight { get; set; }
 
-    [Url, StringLength(500)]
+    /// <summary>External http(s) URL or the path returned by <c>POST /api/images</c>.</summary>
+    [ImageUrl, StringLength(500)]
     public string? ImageUrl { get; set; }
 }

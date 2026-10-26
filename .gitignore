@@ -21,3 +21,6 @@ coverage/
 
 # Local secrets for docker compose
 .env
+
+# Uploaded hotel images (local storage)
+backend/src/HotelChain.Api/uploads/

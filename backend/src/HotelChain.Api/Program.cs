@@ -3,6 +3,7 @@ using HotelChain.Api.Middleware;
 using HotelChain.Application;
 using HotelChain.Infrastructure;
 using HotelChain.Infrastructure.Persistence;
+using HotelChain.Infrastructure.Storage;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -35,6 +36,7 @@ if (app.Environment.IsProduction())
     app.UseHttpsRedirection();
 }
 
+app.UseUploadedImages();
 app.UseCors(ServiceCollectionExtensions.CorsPolicy);
 app.UseAuthentication();
 app.UseAuthorization();
