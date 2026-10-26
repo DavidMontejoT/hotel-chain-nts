@@ -20,8 +20,12 @@ import { ConfirmService } from '../../core/services/confirm.service';
     </dialog>
   `,
   styles: `
-    .dialog { border: 0; border-radius: var(--radius); padding: 24px; width: min(440px, calc(100vw - 32px)); box-shadow: var(--shadow); }
-    .dialog::backdrop { background: rgb(0 0 0 / .45); }
+    .dialog {
+      border: 1px solid var(--glass-border); border-radius: var(--radius); padding: 28px; width: min(440px, calc(100vw - 32px));
+      background: rgb(255 255 255 / .82); box-shadow: var(--glass-shadow);
+      -webkit-backdrop-filter: var(--glass-blur); backdrop-filter: var(--glass-blur);
+    }
+    .dialog::backdrop { background: rgb(15 15 20 / .35); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
     h2 { font-size: 1.2rem; }
     p { margin: 0 0 20px; color: var(--c-muted); }
     .buttons { display: flex; justify-content: flex-end; gap: 12px; flex-wrap: wrap; }

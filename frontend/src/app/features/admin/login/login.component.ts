@@ -10,7 +10,7 @@ import { errorMessage } from '../../../core/services/error-message';
   imports: [ReactiveFormsModule],
   template: `
     <section class="container page">
-      <form class="card login" [formGroup]="form" (ngSubmit)="submit()">
+      <form class="glass login" [formGroup]="form" (ngSubmit)="submit()">
         <h1>Ingreso administrador</h1>
         <p class="muted">Accede para crear, editar y eliminar hoteles.</p>
 
@@ -34,8 +34,8 @@ import { errorMessage } from '../../../core/services/error-message';
     </section>
   `,
   styles: `
-    .login { max-width: 420px; margin: 0 auto; padding: 28px; display: flex; flex-direction: column; gap: 16px; }
-    .login h1 { font-size: 1.5rem; margin: 0; }
+    .login { max-width: 440px; margin: 24px auto; padding: 32px; display: flex; flex-direction: column; gap: 16px; background: rgb(255 255 255 / .7); }
+    .login h1 { font-size: 1.75rem; margin: 0; }
     .login p { margin: 0; }
   `,
 })

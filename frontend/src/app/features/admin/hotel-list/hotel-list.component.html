@@ -10,7 +10,7 @@
     <a class="btn" routerLink="/admin/hotels/new">+ Nuevo hotel</a>
   </div>
 
-  <div class="card filters">
+  <div class="glass filters">
     <app-hotel-search (filterChange)="onFilter($event)" />
   </div>
 
@@ -25,7 +25,7 @@
   } @else if (view.items.length === 0) {
     <p class="empty">No hay hoteles que coincidan.</p>
   } @else {
-    <div class="card table-wrap">
+    <div class="glass table-wrap">
       <table>
         <thead>
           <tr>

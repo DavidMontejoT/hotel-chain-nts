@@ -9,7 +9,7 @@
   @if (loading()) {
     <p class="empty">Cargando…</p>
   } @else {
-    <form class="card form" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+    <form class="glass form" [formGroup]="form" (ngSubmit)="submit()" novalidate>
       <label class="field span-2">
         <span>Nombre *</span>
         <input formControlName="name" />
