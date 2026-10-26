@@ -1,0 +1,75 @@
+<section class="container page">
+  <a routerLink="/admin/hotels" class="back">← Volver al listado</a>
+  <h1>{{ isEdit ? 'Editar hotel' : 'Nuevo hotel' }}</h1>
+
+  @if (error()) {
+    <div class="alert alert-error" role="alert">{{ error() }}</div>
+  }
+
+  @if (loading()) {
+    <p class="empty">Cargando…</p>
+  } @else {
+    <form class="card form" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+      <label class="field span-2">
+        <span>Nombre *</span>
+        <input formControlName="name" />
+        @if (invalid('name')) {
+          <span class="error-text">El nombre es obligatorio (2 a 150 caracteres).</span>
+        }
+      </label>
+
+      <label class="field">
+        <span>Ciudad *</span>
+        <input formControlName="city" />
+        @if (invalid('city')) {
+          <span class="error-text">La ciudad es obligatoria.</span>
+        }
+      </label>
+
+      <label class="field">
+        <span>Dirección *</span>
+        <input formControlName="address" />
+        @if (invalid('address')) {
+          <span class="error-text">La dirección es obligatoria.</span>
+        }
+      </label>
+
+      <label class="field">
+        <span>Calificación *</span>
+        <select formControlName="rating">
+          @for (r of ratings; track r) {
+            <option [ngValue]="r">{{ r }} {{ r === 1 ? 'estrella' : 'estrellas' }}</option>
+          }
+        </select>
+      </label>
+
+      <label class="field">
+        <span>Precio por noche (COP) *</span>
+        <input type="number" min="0" step="1000" formControlName="pricePerNight" />
+        @if (invalid('pricePerNight')) {
+          <span class="error-text">Ingresa un precio válido.</span>
+        }
+      </label>
+
+      <label class="field span-2">
+        <span>URL de la imagen</span>
+        <input type="url" formControlName="imageUrl" placeholder="https://…" />
+        @if (invalid('imageUrl')) {
+          <span class="error-text">Debe ser una URL que empiece por http:// o https://</span>
+        }
+      </label>
+
+      <label class="field span-2">
+        <span>Descripción</span>
+        <textarea rows="4" formControlName="description"></textarea>
+      </label>
+
+      <div class="span-2 buttons">
+        <a class="btn btn-ghost" routerLink="/admin/hotels">Cancelar</a>
+        <button class="btn" type="submit" [disabled]="saving()">
+          {{ saving() ? 'Guardando…' : isEdit ? 'Guardar cambios' : 'Crear hotel' }}
+        </button>
+      </div>
+    </form>
+  }
+</section>
