@@ -1,33 +1,34 @@
 <section class="hero">
   <div class="container hero-inner">
-    <p class="eyebrow">Cadena hotelera</p>
+    <p class="eyebrow">Cadena hotelera · Colombia</p>
     <h1>Descansa como en casa, en cualquier ciudad</h1>
     <p class="lead">
-      Aurora Hoteles reúne hoteles de 1 a 5 estrellas en los mejores destinos del país. Desde hostales
-      sencillos hasta haciendas con spa, todos con la misma atención cálida y cercana.
+      Aurora Hoteles reúne hoteles de 1 a 5 estrellas en los mejores destinos del país, siempre con la misma atención
+      cálida y cercana.
     </p>
-    <a class="btn" href="#hoteles">Ver hoteles</a>
+    <a class="btn btn-light" href="#hoteles">Ver hoteles</a>
   </div>
 </section>
 
-<section class="container highlights" aria-label="Por qué elegirnos">
-  <div class="card highlight"><strong>Destinos únicos</strong><span class="muted">Playa, montaña y ciudad.</span></div>
-  <div class="card highlight"><strong>Calificación verificada</strong><span class="muted">Cada hotel con su categoría en estrellas.</span></div>
-  <div class="card highlight"><strong>Atención 24/7</strong><span class="muted">Estamos contigo durante toda tu estadía.</span></div>
-</section>
+<div class="search-dock">
+  <div class="container">
+    <div class="glass search-panel">
+      <app-hotel-search (filterChange)="search($event)" />
+    </div>
+  </div>
+</div>
 
 <section id="hoteles" class="container page">
   @let view = view$ | async;
 
   <div class="page-header">
-    <h2>Nuestros hoteles</h2>
+    <div>
+      <p class="eyebrow accent">Nuestros hoteles</p>
+      <h2>Listos para darte la bienvenida</h2>
+    </div>
     @if (view && !view.loading && !view.error) {
       <span class="muted">{{ view.total }} {{ view.total === 1 ? 'hotel encontrado' : 'hoteles encontrados' }}</span>
     }
-  </div>
-
-  <div class="card filters">
-    <app-hotel-search (filterChange)="search($event)" />
   </div>
 
   @if (!view || view.loading) {
@@ -35,31 +36,68 @@
   } @else if (view.error) {
     <div class="alert alert-error" role="alert">{{ view.error }}</div>
   } @else if (view.items.length === 0) {
-    <p class="empty">No encontramos hoteles con esos criterios.</p>
+    <p class="empty glass">No encontramos hoteles con esos criterios.</p>
   } @else {
     <ul class="grid">
       @for (hotel of view.items; track hotel.id) {
-        <li class="card hotel">
+        <li class="hotel">
           <div class="photo">
             @if (hotel.imageUrl && !brokenImages().has(hotel.id)) {
               <img [src]="hotel.imageUrl | imageSrc" [alt]="hotel.name" loading="lazy" (error)="markBroken(hotel.id)" />
             } @else {
-              <span aria-hidden="true">✦</span>
+              <span class="placeholder" aria-hidden="true">✦</span>
             }
           </div>
-          <div class="body">
-            <app-star-rating [value]="hotel.rating" />
-            <h3>{{ hotel.name }}</h3>
-            <p class="muted city">{{ hotel.city }} · {{ hotel.address }}</p>
-            @if (hotel.description) {
-              <p class="desc">{{ hotel.description }}</p>
-            }
-            <p class="price">
-              {{ hotel.pricePerNight | currency: 'COP' : 'symbol-narrow' : '1.0-0' }} <span class="muted">/ noche</span>
-            </p>
+          <div class="overlay">
+            <div class="glass-info">
+              <p class="eyebrow city">{{ hotel.city }}</p>
+              <h3>{{ hotel.name }}</h3>
+              <app-star-rating [value]="hotel.rating" />
+              @if (hotel.description) {
+                <p class="desc">{{ hotel.description }}</p>
+              }
+              <div class="info-foot">
+                <p class="price">
+                  {{ hotel.pricePerNight | currency: 'COP' : 'symbol-narrow' : '1.0-0' }} <span>/ noche</span>
+                </p>
+                <span class="chevron" aria-hidden="true">›</span>
+              </div>
+            </div>
           </div>
         </li>
       }
     </ul>
   }
+</section>
+
+<section class="container benefits-wrap" aria-labelledby="benefits-title">
+  <div class="benefits">
+    <div class="glass benefits-panel">
+      <div class="benefits-copy">
+        <h2 id="benefits-title">Viaja mejor con Aurora</h2>
+        <p class="muted">Tarifas directas, atención todo el día y los detalles que hacen la diferencia en cada estadía.</p>
+        <div class="benefits-actions">
+          <a class="btn" href="#hoteles">Buscar hoteles</a>
+        </div>
+      </div>
+      <ul class="benefit-grid">
+        <li>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 9a15 15 0 0 1 20 0M5.5 12.5a10 10 0 0 1 13 0M9 16a5 5 0 0 1 6 0" /><circle cx="12" cy="19.5" r="1" /></svg>
+          <span>Wifi gratis</span>
+        </li>
+        <li>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8Z" /><circle cx="7.5" cy="7.5" r="1.5" /></svg>
+          <span>Mejor tarifa</span>
+        </li>
+        <li>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="2" width="12" height="20" rx="2" /><path d="M10 6h4M12 18h.01" /></svg>
+          <span>Check-in ágil</span>
+        </li>
+        <li>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11h13a3 3 0 0 1 0 6h-1M4 11v5a4 4 0 0 0 4 4h4a4 4 0 0 0 4-4v-5M8 3v4M12 3v4" /></svg>
+          <span>Desayuno incluido</span>
+        </li>
+      </ul>
+    </div>
+  </div>
 </section>
