@@ -30,7 +30,7 @@ type Mode = 'upload' | 'url';
       </label>
     } @else {
       <input type="url" placeholder="https://…" [value]="isExternal() ? value() : ''" [disabled]="disabled()"
-             (input)="setValue($any($event.target).value)" (blur)="onTouched()" />
+             (input)="onUrlInput($event)" (blur)="onTouched()" />
     }
 
     @if (error()) {
@@ -99,6 +99,10 @@ export class ImagePickerComponent implements ControlValueAccessor {
     this.error.set(null);
     this.value.set(value);
     this.onChange(value);
+  }
+
+  protected onUrlInput(event: Event): void {
+    this.setValue((event.target as HTMLInputElement).value);
   }
 
   protected onFile(event: Event): void {
